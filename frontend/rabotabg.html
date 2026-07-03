@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JumpStart — Обяви за работа</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Source+Serif+4:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16233F;
+    --navy-light:#1F3358;
+    --coral:#E8622C;
+    --coral-dark:#C74E1E;
+    --coral-light:#FBE6DB;
+    --cream:#F7F5F0;
+    --paper:#FFFFFF;
+    --line:#E4E0D6;
+    --line-strong:#CFC9B8;
+    --ink:#1C1B17;
+    --ink-soft:#5B5A52;
+    --ink-mute:#8C8A7E;
+    --green:#2E7D4F;
+    --green-bg:#E7F3EB;
+    --radius:10px;
+    --shadow:0 1px 2px rgba(28,27,23,0.06);
+    --shadow-md:0 4px 16px rgba(22,35,63,0.08);
+    --shadow-lg:0 16px 48px rgba(22,35,63,0.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{font-weight:700;letter-spacing:-0.01em;}
+  .brand-font{font-family:'Source Serif 4',serif;}
+  a{color:inherit;text-decoration:none;}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;}
+  input,select,textarea{font-family:inherit;}
+  ::selection{background:var(--coral-light);color:var(--coral-dark);}
+
+  .container{max-width:1180px;margin:0 auto;padding:0 24px;}
+
+  /* ===== HEADER ===== */
+  .site-header{
+    background:var(--navy);
+    position:sticky;top:0;z-index:100;
+    box-shadow:0 1px 0 rgba(0,0,0,0.15);
+  }
+  .header-top{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px 0;
+  }
+  .logo{
+    display:flex;align-items:center;gap:10px;
+    font-size:22px;font-weight:800;color:#fff;
+  }
+  .logo-mark{
+    width:36px;height:44px;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .logo-mark svg{width:100%;height:100%;display:block;}
+  .logo .logo-mark{width:74px;height:68px;}
+  .logo{gap:14px;}
+  .logo-sub{font-style:italic;}
+  nav.main-nav{display:flex;gap:28px;align-items:center;}
+  .nav-link{
+    color:rgba(255,255,255,0.72);
+    font-size:14.5px;font-weight:600;
+    transition:color .15s;
+    white-space:nowrap;
+  }
+  .nav-link:hover{color:#fff;}
+  .header-actions{display:flex;gap:10px;align-items:center;}
+  .btn{
+    padding:9px 18px;border-radius:8px;
+    font-size:14px;font-weight:700;
+    transition:all .15s;
+    display:inline-flex;align-items:center;gap:6px;
+    white-space:nowrap;
+  }
+  .btn-coral{background:var(--coral);color:#fff;}
+  .btn-coral:hover{background:var(--coral-dark);}
+  .btn-ghost-light{color:#fff;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);}
+  .btn-ghost-light:hover{background:rgba(255,255,255,0.16);}
+  .btn-outline{border:1.5px solid var(--line-strong);color:var(--ink);background:var(--paper);}
+  .btn-outline:hover{border-color:var(--navy);background:var(--cream);}
+  .btn-navy{background:var(--navy);color:#fff;}
+  .btn-navy:hover{background:var(--navy-light);}
+  .btn-sm{padding:6px 13px;font-size:13px;}
+  .btn-full{width:100%;justify-content:center;}
+  .btn-lg{padding:14px 28px;font-size:15.5px;}
+  .btn:disabled{opacity:0.55;cursor:not-allowed;}
+
+  .user-chip{
+    display:flex;align-items:center;gap:8px;
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.2);
+    padding:6px 14px 6px 6px;border-radius:999px;
+    color:#fff;font-size:13.5px;font-weight:600;
+  }
+  .user-avatar{
+    width:26px;height:26px;border-radius:50%;
+    background:var(--coral);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:800;flex-shrink:0;
+  }
+
+  /* ===== HERO ===== */
+  .hero{
+    background:linear-gradient(180deg,var(--navy) 0%,var(--navy-light) 100%);
+    padding:56px 0 90px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero::after{
+    content:'';position:absolute;right:-80px;top:-40px;
+    width:420px;height:420px;border-radius:50%;
+    background:radial-gradient(circle,rgba(232,98,44,0.14) 0%,transparent 70%);
+  }
+  .hero-inner{position:relative;z-index:1;}
+  .hero-eyebrow{
+    color:var(--coral);font-size:13px;font-weight:800;
+    letter-spacing:0.08em;text-transform:uppercase;
+    margin-bottom:14px;display:flex;align-items:center;gap:8px;
+  }
+  .hero-eyebrow::before{content:'';width:20px;height:2px;background:var(--coral);}
+  .hero h1{
+    color:#fff;font-size:42px;line-height:1.15;
+    max-width:640px;margin-bottom:14px;
+  }
+  .hero-sub{
+    color:rgba(255,255,255,0.68);font-size:16.5px;
+    max-width:520px;margin-bottom:34px;
+  }
+  .search-panel{
+    background:var(--paper);
+    border-radius:14px;
+    padding:10px;
+    box-shadow:var(--shadow-lg);
+    display:grid;
+    grid-template-columns:1.4fr 1fr auto;
+    gap:8px;
+    max-width:820px;
+  }
+  .search-field{
+    display:flex;align-items:center;gap:10px;
+    padding:11px 14px;border-radius:9px;
+    border:1.5px solid transparent;
+    transition:border-color .15s;
+  }
+  .search-field:focus-within{border-color:var(--line-strong);background:var(--cream);}
+  .search-field svg{flex-shrink:0;color:var(--ink-mute);}
+  .search-field input,.search-field select{
+    border:none;outline:none;background:none;
+    width:100%;font-size:15px;color:var(--ink);
+  }
+  .search-field select{cursor:pointer;}
+  .search-divider{width:1px;background:var(--line);align-self:center;height:28px;}
+
+  .hero-stats{
+    display:flex;gap:36px;margin-top:30px;
+  }
+  .hero-stat-num{color:#fff;font-size:24px;font-weight:800;}
+  .hero-stat-label{color:rgba(255,255,255,0.55);font-size:13px;margin-top:2px;}
+
+  .chip-row{display:flex;gap:9px;flex-wrap:wrap;margin-top:22px;}
+  .quick-chip{
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.16);
+    color:rgba(255,255,255,0.82);
+    padding:7px 14px;border-radius:999px;
+    font-size:13px;font-weight:600;
+    transition:all .15s;
+  }
+  .quick-chip:hover{background:rgba(255,255,255,0.16);color:#fff;}
+
+  /* ===== SECTIONS ===== */
+  .section{padding:56px 0;}
+  .section-head{
+    display:flex;align-items:baseline;justify-content:space-between;
+    margin-bottom:26px;flex-wrap:wrap;gap:10px;
+  }
+  .section-head h2{font-size:25px;}
+  .section-head .see-all{
+    font-size:13.5px;font-weight:700;color:var(--coral);
+    display:flex;align-items:center;gap:4px;
+  }
+
+  .cat-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
+  }
+  .cat-card{
+    background:var(--paper);border:1px solid var(--line);
+    border-radius:12px;padding:20px;
+    transition:all .15s;
+  }
+  .cat-card:hover{border-color:var(--coral);box-shadow:var(--shadow-md);transform:translateY(-2px);}
+  .cat-icon{
+    width:42px;height:42px;border-radius:10px;
+    background:var(--coral-light);color:var(--coral-dark);
+    display:flex;align-items:center;justify-content:center;
+    margin-bottom:14px;
+  }
+  .cat-card h4{font-size:15.5px;margin-bottom:4px;}
+  .cat-card p{font-size:13px;color:var(--ink-mute);}
+
+  /* ===== JOB LIST ===== */
+  .job-layout{display:grid;grid-template-columns:260px 1fr;gap:28px;align-items:start;}
+  .filters-box{
+    background:var(--paper);border:1px solid var(--line);
+    border-radius:12px;padding:20px;
+    position:sticky;top:104px;
+  }
+  .filters-box h4{font-size:14px;margin-bottom:14px;}
+  .filter-group{margin-bottom:20px;}
+  .filter-group:last-child{margin-bottom:0;}
+  .filter-group label{
+    font-size:12.5px;font-weight:700;color:var(--ink-soft);
+    text-transform:uppercase;letter-spacing:0.03em;
+    display:block;margin-bottom:8px;
+  }
+  .filter-select{
+    width:100%;padding:9px 11px;border:1.5px solid var(--line);
+    border-radius:8px;font-size:13.5px;background:var(--paper);
+    color:var(--ink);
+  }
+  .filter-select:focus{outline:none;border-color:var(--navy);}
+  .checkbox-row{display:flex;align-items:center;gap:8px;margin-bottom:9px;font-size:13.5px;color:var(--ink-soft);}
+  .checkbox-row input{width:16px;height:16px;accent-color:var(--coral);}
+
+  .job-list{display:flex;flex-direction:column;gap:12px;}
+  .job-card{
+    background:var(--paper);border:1px solid var(--line);
+    border-radius:12px;padding:20px 22px;
+    display:flex;gap:16px;align-items:flex-start;
+    transition:all .15s;cursor:pointer;
+  }
+  .job-card:hover{border-color:var(--line-strong);box-shadow:var(--shadow-md);}
+  .job-logo{
+    width:52px;height:52px;border-radius:10px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:17px;color:#fff;
+  }
+  .job-main{flex:1;min-width:0;}
+  .job-top-row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;}
+  .job-title{font-size:16.5px;font-weight:700;margin-bottom:3px;}
+  .job-title:hover{color:var(--coral-dark);}
+  .job-company{font-size:13.5px;color:var(--ink-soft);font-weight:600;}
+  .job-meta-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:11px;}
+  .job-meta-item{
+    display:flex;align-items:center;gap:5px;
+    font-size:12.5px;color:var(--ink-mute);font-weight:600;
+  }
+  .job-tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;}
+  .tag{
+    padding:4px 10px;border-radius:6px;font-size:11.5px;font-weight:700;
+  }
+  .tag-type{background:var(--green-bg);color:var(--green);}
+  .tag-remote{background:#E8EEFB;color:#2451A3;}
+  .tag-new{background:var(--coral-light);color:var(--coral-dark);}
+  .job-salary{
+    font-size:14.5px;font-weight:800;color:var(--navy);
+    white-space:nowrap;text-align:right;
+  }
+  .job-salary-label{font-size:11px;color:var(--ink-mute);font-weight:600;margin-top:2px;}
+  .save-btn{
+    width:34px;height:34px;border-radius:8px;
+    border:1.5px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--ink-mute);flex-shrink:0;
+    transition:all .15s;
+  }
+  .save-btn:hover{border-color:var(--coral);color:var(--coral);}
+  .save-btn.saved{background:var(--coral-light);border-color:var(--coral);color:var(--coral-dark);}
+
+  .empty-state{
+    text-align:center;padding:60px 20px;
+    background:var(--paper);border:1px dashed var(--line-strong);border-radius:12px;
+  }
+  .empty-state svg{color:var(--ink-mute);margin-bottom:14px;}
+  .empty-state h4{font-size:16px;margin-bottom:6px;}
+  .empty-state p{font-size:13.5px;color:var(--ink-mute);margin-bottom:18px;}
+
+  /* ===== EMPLOYERS STRIP ===== */
+  .employers-strip{background:var(--paper);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:30px 0;}
+  .strip-label{font-size:12px;font-weight:700;color:var(--ink-mute);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:16px;text-align:center;}
+  .logo-strip{display:flex;justify-content:center;gap:44px;flex-wrap:wrap;align-items:center;}
+  .strip-logo{font-family:'Source Serif 4',serif;font-weight:600;font-size:19px;color:var(--ink-mute);opacity:0.7;}
+
+  /* ===== CTA BAND ===== */
+  .cta-band{
+    background:var(--navy);border-radius:16px;
+    padding:44px 48px;
+    display:flex;justify-content:space-between;align-items:center;gap:24px;
+    margin:8px 0 0;
+  }
+  .cta-band h3{color:#fff;font-size:23px;margin-bottom:6px;}
+  .cta-band p{color:rgba(255,255,255,0.62);font-size:14.5px;max-width:420px;}
+  .cta-band-actions{display:flex;gap:10px;flex-shrink:0;}
+
+  /* ===== FOOTER ===== */
+  footer{background:var(--navy);color:rgba(255,255,255,0.6);padding:48px 0 24px;margin-top:60px;}
+  .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:32px;margin-bottom:36px;}
+  .footer-logo{color:#fff;font-size:19px;font-weight:800;display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+  .footer-col h5{color:#fff;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:14px;}
+  .footer-col a{display:block;font-size:13.5px;color:rgba(255,255,255,0.55);margin-bottom:10px;transition:color .15s;}
+  .footer-col a:hover{color:#fff;}
+  .footer-bottom{border-top:1px solid rgba(255,255,255,0.12);padding-top:20px;display:flex;justify-content:space-between;font-size:12.5px;color:rgba(255,255,255,0.4);flex-wrap:wrap;gap:8px;}
+
+  /* ===== MODAL ===== */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(22,35,63,0.55);
+    display:flex;align-items:center;justify-content:center;
+    z-index:1000;padding:20px;
+    animation:fadeIn .15s ease;
+  }
+  @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+  .modal-box{
+    background:var(--paper);border-radius:16px;
+    width:100%;max-width:440px;
+    max-height:90vh;overflow-y:auto;
+    box-shadow:var(--shadow-lg);
+    animation:slideUp .2s ease;
+  }
+  @keyframes slideUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+  .modal-header{
+    padding:24px 26px 0;display:flex;justify-content:space-between;align-items:flex-start;
+  }
+  .modal-close{
+    width:30px;height:30px;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    color:var(--ink-mute);flex-shrink:0;
+  }
+  .modal-close:hover{background:var(--cream);color:var(--ink);}
+  .modal-body{padding:14px 26px 26px;}
+  .modal-title{font-size:21px;margin-bottom:4px;}
+  .modal-sub{font-size:13.5px;color:var(--ink-mute);margin-bottom:22px;}
+
+  .form-group{margin-bottom:15px;}
+  .form-group label{
+    display:block;font-size:13px;font-weight:700;color:var(--ink);margin-bottom:6px;
+  }
+  .form-input{
+    width:100%;padding:11px 13px;border:1.5px solid var(--line);
+    border-radius:8px;font-size:14.5px;color:var(--ink);
+    transition:border-color .15s;background:var(--paper);
+  }
+  .form-input:focus{outline:none;border-color:var(--navy);}
+  .form-input.err{border-color:#C0392B;}
+  .form-err-msg{font-size:12px;color:#C0392B;margin-top:5px;font-weight:600;}
+  .form-hint{font-size:12px;color:var(--ink-mute);margin-top:5px;}
+
+  .role-toggle{display:flex;gap:8px;margin-bottom:18px;}
+  .role-opt{
+    flex:1;padding:12px;border:1.5px solid var(--line);border-radius:9px;
+    text-align:center;transition:all .15s;
+  }
+  .role-opt.active{border-color:var(--navy);background:var(--navy);color:#fff;}
+  .role-opt svg{margin-bottom:5px;}
+  .role-opt span{display:block;font-size:13px;font-weight:700;}
+
+  .modal-switch{
+    text-align:center;font-size:13.5px;color:var(--ink-mute);margin-top:18px;
+    padding-top:16px;border-top:1px solid var(--line);
+  }
+  .modal-switch button{color:var(--coral);font-weight:700;}
+
+  .success-box{text-align:center;padding:10px 0 6px;}
+  .success-icon{
+    width:60px;height:60px;border-radius:50%;background:var(--green-bg);
+    display:flex;align-items:center;justify-content:center;color:var(--green);
+    margin:0 auto 18px;
+  }
+
+  /* ===== JOB DETAIL MODAL ===== */
+  .detail-modal{max-width:640px;}
+  .detail-header{
+    padding:28px 30px;background:var(--cream);
+    border-radius:16px 16px 0 0;
+    display:flex;gap:16px;align-items:flex-start;
+  }
+  .detail-body{padding:26px 30px 30px;}
+  .detail-body h4{font-size:15px;margin:22px 0 10px;}
+  .detail-body h4:first-child{margin-top:0;}
+  .detail-body p{font-size:14.5px;color:var(--ink-soft);line-height:1.7;}
+  .detail-body ul{padding-left:20px;margin-top:8px;}
+  .detail-body li{font-size:14.5px;color:var(--ink-soft);line-height:1.9;}
+  .detail-actions{display:flex;gap:10px;margin-top:26px;padding-top:22px;border-top:1px solid var(--line);}
+
+  /* ===== POST JOB PAGE ===== */
+  .post-layout{display:grid;grid-template-columns:1fr 320px;gap:28px;align-items:start;}
+  .post-form-card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:32px;}
+  .post-form-card h3{font-size:19px;margin-bottom:2px;}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .tip-card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:22px;position:sticky;top:104px;}
+  .tip-card h5{font-size:13px;text-transform:uppercase;letter-spacing:0.04em;color:var(--ink-soft);margin-bottom:14px;}
+  .tip-item{display:flex;gap:10px;margin-bottom:14px;font-size:13px;color:var(--ink-soft);line-height:1.6;}
+  .tip-item svg{color:var(--green);flex-shrink:0;margin-top:1px;}
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+    background:var(--navy);color:#fff;padding:13px 22px;border-radius:10px;
+    font-size:13.5px;font-weight:600;box-shadow:var(--shadow-lg);
+    display:flex;align-items:center;gap:10px;z-index:1200;
+    animation:toastIn .2s ease;
+  }
+  @keyframes toastIn{from{opacity:0;transform:translate(-50%,10px);}to{opacity:1;transform:translate(-50%,0);}}
+
+  .breadcrumb{font-size:13px;color:var(--ink-mute);margin-bottom:20px;display:flex;gap:6px;align-items:center;}
+  .breadcrumb a{color:var(--ink-soft);font-weight:600;}
+  .breadcrumb a:hover{color:var(--coral);}
+
+  .page-title-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+  .page-title-row h1{font-size:26px;}
+  .result-count{font-size:14px;color:var(--ink-mute);margin-top:4px;}
+
+  @media (max-width:900px){
+    .container{padding:0 16px;}
+    .header-top{flex-wrap:wrap;gap:12px;}
+    nav.main-nav{order:3;width:100%;overflow-x:auto;gap:20px;padding-bottom:2px;}
+    .hero h1{font-size:30px;}
+    .search-panel{grid-template-columns:1fr;}
+    .search-divider{display:none;}
+    .cat-grid{grid-template-columns:repeat(2,1fr);}
+    .job-layout{grid-template-columns:1fr;}
+    .filters-box{position:static;}
+    .footer-grid{grid-template-columns:1fr 1fr;}
+    .post-layout{grid-template-columns:1fr;}
+    .cta-band{flex-direction:column;text-align:center;}
+    .form-row{grid-template-columns:1fr;}
+    .hero-stats{gap:22px;flex-wrap:wrap;}
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const {useState,useMemo,useEffect,useRef} = React;
+
+/* ============ ICONS ============ */
+const Icon = ({name,size=18,...props}) => {
+  const paths = {
+    search: <><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></>,
+    pin: <><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0116 0z"/><circle cx="12" cy="10" r="3"/></>,
+    briefcase: <><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"/></>,
+    chevronDown: <path d="M6 9l6 6 6-6"/>,
+    chevronRight: <path d="M9 6l6 6-6 6"/>,
+    x: <path d="M18 6L6 18M6 6l12 12"/>,
+    bookmark: <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>,
+    clock: <><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></>,
+    money: <><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/></>,
+    building: <><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 8h1M9 12h1M9 16h1M14 8h1M14 12h1M14 16h1"/></>,
+    users: <><circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.5 3-6 7-6s7 2.5 7 6"/><circle cx="17" cy="9" r="2.8"/><path d="M22 20c0-2.8-2-5-4.5-5.6"/></>,
+    check: <path d="M20 6L9 17l-5-5"/>,
+    checkCircle: <><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></>,
+    user: <><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></>,
+    mail: <><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 6l10 7 10-7"/></>,
+    lock: <><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></>,
+    eye: <><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></>,
+    eyeOff: <><path d="M3 3l18 18"/><path d="M10.6 5.1A10.7 10.7 0 0112 5c6.5 0 10 7 10 7a17 17 0 01-3.2 4.1M6.6 6.6C4 8.3 2 12 2 12s3.5 7 10 7a10.4 10.4 0 004-.8"/><path d="M9.9 9.9a3 3 0 004.2 4.2"/></>,
+    arrowRight: <path d="M5 12h14M13 6l6 6-6 6"/>,
+    code: <path d="M8 6l-6 6 6 6M16 6l6 6-6 6"/>,
+    palette: <><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1.2" fill="currentColor"/><circle cx="14" cy="9" r="1.2" fill="currentColor"/><circle cx="15" cy="14" r="1.2" fill="currentColor"/><path d="M12 21a3 3 0 01-3-3c0-1.5 1-2 1-3.5A2.5 2.5 0 007.5 12H7a5 5 0 015-5"/></>,
+    trending: <><path d="M3 17l6-6 4 4 8-8"/><path d="M15 6h6v6"/></>,
+    truck: <><rect x="1" y="7" width="14" height="10" rx="1"/><path d="M15 10h4l3 3v4h-7z"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></>,
+    heart: <path d="M12 21s-7.5-4.6-10-9.3C.3 8.2 2 4.5 5.6 4a5 5 0 016.4 2.7A5 5 0 0118.4 4c3.6.5 5.3 4.2 3.6 7.7C19.5 16.4 12 21 12 21z"/>,
+    stethoscope: <><path d="M6 3v6a4 4 0 008 0V3"/><path d="M10 13v2a6 6 0 0012 0v-2"/><circle cx="20" cy="9" r="2"/></>,
+    home: <><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 001 1h4v-6h4v6h4a1 1 0 001-1V10"/></>,
+    bell: <><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M10 21a2 2 0 004 0"/></>,
+    filter: <path d="M4 6h16M8 12h8M11 18h2"/>,
+    plus: <path d="M12 5v14M5 12h14"/>,
+    logout: <><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></>,
+    globe: <><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></>,
+    fileText: <><path d="M6 2h9l5 5v13a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2z"/><path d="M8 12h8M8 16h8M8 8h3"/></>,
+  };
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{paths[name]}</svg>;
+};
+
+/* ============ SEED DATA ============ */
+const CATEGORIES = [
+  {id:'it',name:'ИТ и разработка',icon:'code',count:342,color:'#2451A3'},
+  {id:'sales',name:'Продажби',icon:'trending',color:'#2E7D4F'},
+  {id:'design',name:'Дизайн',icon:'palette',color:'#8E44AD'},
+  {id:'logistics',name:'Логистика',icon:'truck',color:'#C0392B'},
+  {id:'admin',name:'Административни',icon:'briefcase',color:'#16A085'},
+  {id:'health',name:'Здравеопазване',icon:'stethoscope',color:'#D35400'},
+  {id:'hr',name:'Човешки ресурси',icon:'users',color:'#2980B9'},
+  {id:'customer',name:'Обслужване на клиенти',icon:'heart',color:'#E67E22'},
+];
+
+const CITIES = ['Всички градове','София','Пловдив','Варна','Бургас','Русе','Стара Загора','Плевен'];
+const EXPERIENCE = ['Всяко ниво','Без опит','1-3 години','3-5 години','Над 5 години'];
+const JOB_TYPES = ['Всички','Пълен работен ден','Непълен работен ден','Дистанционна работа','Стаж','Хоно­рар'];
+
+const COMPANIES = [
+  {name:'НексаТех АД',color:'#2451A3',init:'НТ'},
+  {name:'Балкан Логистикс',color:'#C0392B',init:'БЛ'},
+  {name:'Софтуерна Кула ЕООД',color:'#8E44AD',init:'СК'},
+  {name:'Тракия Ритейл',color:'#2E7D4F',init:'ТР'},
+  {name:'Медика Плюс',color:'#D35400',init:'МП'},
+  {name:'Финанс Груп България',color:'#16233F',init:'ФГ'},
+  {name:'Креативна Агенция Вижън',color:'#E67E22',init:'КВ'},
+  {name:'ИндустриалСтрой ЕАД',color:'#2980B9',init:'ИС'},
+];
+
+/* ============ API CLIENT ============ */
+// Point this at your deployed backend (see /backend in the project you
+// downloaded alongside this file). Defaults to a local dev server.
+const API_BASE = (window.JUMPSTART_API_BASE) || 'http://localhost:4000/api';
+
+// localStorage keeps the login session across page refreshes. Wrapped in
+// try/catch because some preview/sandbox contexts block storage access —
+// in that case we fall back to an in-memory-only session for this tab.
+const safeStorage = (() => {
+  let memory = {};
+  let usable = true;
+  try {
+    const k = '__jumpstart_test__';
+    window.localStorage.setItem(k, '1');
+    window.localStorage.removeItem(k);
+  } catch (e) { usable = false; }
+  return {
+    get(key) { try { return usable ? window.localStorage.getItem(key) : memory[key] ?? null; } catch (e) { return memory[key] ?? null; } },
+    set(key, val) { try { if (usable) { window.localStorage.setItem(key, val); return; } } catch (e) {} memory[key] = val; },
+    remove(key) { try { if (usable) { window.localStorage.removeItem(key); return; } } catch (e) {} delete memory[key]; },
+  };
+})();
+
+class ApiError extends Error {}
+
+async function apiFetch(path, { method = 'GET', body, token } = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  let res;
+  try {
+    res = await fetch(API_BASE + path, { method, headers, body: body !== undefined ? JSON.stringify(body) : undefined });
+  } catch (networkErr) {
+    throw new ApiError('Няма връзка със сървъра. Проверете дали бекендът е стартиран.');
+  }
+  let data = {};
+  try { data = await res.json(); } catch (e) { /* empty body, e.g. some 204s */ }
+  if (!res.ok) throw new ApiError(data.error || 'Възникна грешка. Опитайте отново.');
+  return data;
+}
+
+const api = {
+  listJobs: (params = {}) => {
+    const qs = new URLSearchParams(Object.entries(params).filter(([,v]) => v !== undefined && v !== '')).toString();
+    return apiFetch('/jobs' + (qs ? '?' + qs : '')).then(d => d.jobs);
+  },
+  createJob: (token, form) => apiFetch('/jobs', { method: 'POST', token, body: form }).then(d => d.job),
+  myJobs: (token) => apiFetch('/jobs/mine', { token }).then(d => d.jobs),
+  applyToJob: (token, jobId) => apiFetch(`/jobs/${jobId}/apply`, { method: 'POST', token }),
+  myApplications: (token) => apiFetch('/applications', { token }).then(d => d.jobIds),
+  saveJob: (token, jobId) => apiFetch(`/saved/${jobId}`, { method: 'POST', token }),
+  unsaveJob: (token, jobId) => apiFetch(`/saved/${jobId}`, { method: 'DELETE', token }),
+  mySavedJobs: (token) => apiFetch('/saved', { token }).then(d => d.jobs),
+  register: (payload) => apiFetch('/auth/register', { method: 'POST', body: payload }),
+  login: (payload) => apiFetch('/auth/login', { method: 'POST', body: payload }),
+  me: (token) => apiFetch('/auth/me', { token }).then(d => d.user),
+};
+
+// The backend stores raw timestamps; these turn them into the same
+// Bulgarian relative-time labels the UI has always shown.
+function formatPosted(createdAt) {
+  const days = Math.floor((Date.now() - new Date(createdAt).getTime()) / 86400000);
+  if (days <= 0) return 'Днес';
+  if (days === 1) return 'Вчера';
+  return 'Преди ' + days + ' дни';
+}
+function isRecentlyPosted(createdAt) {
+  return (Date.now() - new Date(createdAt).getTime()) < 3 * 86400000;
+}
+// Raw job rows from the API carry createdAt; the UI has always displayed
+// a Bulgarian relative-time label and a "new" tag instead, so we attach
+// those here once, right after fetching, rather than changing every
+// component that reads job.posted / job.isNew.
+function hydrateJob(job) {
+  return { ...job, posted: formatPosted(job.createdAt), isNew: isRecentlyPosted(job.createdAt) };
+}
+function hydrateJobs(jobs) { return jobs.map(hydrateJob); }
+
+/* ============ LOGO ============ */
+function RocketJLogo(){
+  return (
+    <svg viewBox="-3 3 254 234" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 162 96 L 162 148 C 162 190 130 214 90 209 C 60 205 38 191 27 167"
+            fill="none" stroke="#1B69EE" strokeWidth="46" strokeLinecap="round"/>
+      <g transform="translate(166,120) rotate(36) scale(1.08)">
+        <path d="M 8 48 L 24 64 L 9 63 L 20 86 L 3 79 L 9 106 L -24 116 L -14 86 L -27 92 L -13 66 L -22 60 L -8 52 Z" fill="#12C983"/>
+        <g stroke="#12C983" strokeWidth="5.5" strokeLinecap="round" opacity="0.4">
+          <line x1="30" y1="70" x2="6" y2="102"/>
+          <line x1="40" y1="80" x2="18" y2="110"/>
+        </g>
+        <polygon points="-18,32 -42,54 -12,48" fill="#1B69EE"/>
+        <polygon points="18,32 42,54 12,48" fill="#1B69EE"/>
+        <rect x="-19" y="-66" width="38" height="104" rx="19" fill="#1B69EE"/>
+        <path d="M -19 -62 C -19 -98 0 -128 0 -128 C 0 -128 19 -98 19 -62 Z" fill="#1B69EE"/>
+        <circle cx="0" cy="-30" r="11" fill="#E7F0FC"/>
+        <circle cx="0" cy="-30" r="11" fill="none" stroke="#1B69EE" strokeWidth="3"/>
+      </g>
+    </svg>
+  );
+}
+
+/* ============ HEADER ============ */
+function Header({user,onOpenAuth,onLogout,onGoHome,onGoPost,onGoJobs,onGoSaved,onGoDashboard}){
+  return (
+    <header className="site-header">
+      <div className="container header-top">
+        <a href="#" onClick={(e)=>{e.preventDefault();onGoHome();}} className="logo">
+          <div className="logo-mark"><RocketJLogo/></div>
+          Jump<span className="logo-sub">Start</span>
+        </a>
+        <nav className="main-nav">
+          <a href="#" onClick={(e)=>{e.preventDefault();onGoJobs();}} className="nav-link">Обяви за работа</a>
+          <a href="#" onClick={(e)=>{e.preventDefault();onGoPost();}} className="nav-link">За работодатели</a>
+          {user && <a href="#" onClick={(e)=>{e.preventDefault();onGoSaved();}} className="nav-link">Запазени</a>}
+          {user && user.role==='employer' && <a href="#" onClick={(e)=>{e.preventDefault();onGoDashboard();}} className="nav-link">Моите обяви</a>}
+        </nav>
+        <div className="header-actions">
+          {!user ? (
+            <>
+              <button className="btn btn-ghost-light btn-sm" onClick={()=>onOpenAuth('login')}>Вход</button>
+              <button className="btn btn-coral" onClick={()=>onOpenAuth('register')}>Регистрация</button>
+            </>
+          ) : (
+            <>
+              <button className="btn btn-coral btn-sm" onClick={onGoPost}><Icon name="plus" size={15}/>Публикувай</button>
+              <div className="user-chip">
+                <div className="user-avatar">{user.name.slice(0,2).toUpperCase()}</div>
+                {user.name.split(' ')[0]}
+              </div>
+              <button className="btn btn-ghost-light btn-sm" onClick={onLogout} title="Изход"><Icon name="logout" size={15}/></button>
+            </>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}
+
+/* ============ HERO / SEARCH ============ */
+function Hero({onSearch}){
+  const [kw,setKw] = useState('');
+  const [city,setCity] = useState('Всички градове');
+  return (
+    <section className="hero">
+      <div className="container hero-inner">
+        <div className="hero-eyebrow">Над 2 400 активни обяви в България</div>
+        <h1>Намерете следващата си роля<br/>по-бързо, отколкото си мислите</h1>
+        <p className="hero-sub">Хиляди компании в България публикуват обяви всеки ден. Създайте профил, кандидатствайте с едно кликване и следете статуса на кандидатурите си.</p>
+
+        <div className="search-panel">
+          <div className="search-field">
+            <Icon name="search" size={18}/>
+            <input placeholder="Длъжност, ключова дума или компания" value={kw} onChange={e=>setKw(e.target.value)}/>
+          </div>
+          <div className="search-divider"></div>
+          <div className="search-field">
+            <Icon name="pin" size={18}/>
+            <select value={city} onChange={e=>setCity(e.target.value)}>
+              {CITIES.map(c=><option key={c}>{c}</option>)}
+            </select>
+          </div>
+          <button className="btn btn-coral btn-lg" onClick={()=>onSearch(kw,city)}>Търси</button>
+        </div>
+
+        <div className="chip-row">
+          {['Отдалечена работа','Без опит','ИТ сектор','Продажби','Стажантски програми'].map(c=>
+            <button key={c} className="quick-chip" onClick={()=>onSearch(c==='Без опит'?'':c, 'Всички градове')}>{c}</button>
+          )}
+        </div>
+
+        <div className="hero-stats">
+          <div><div className="hero-stat-num">2 431</div><div className="hero-stat-label">активни обяви</div></div>
+          <div><div className="hero-stat-num">890+</div><div className="hero-stat-label">компании</div></div>
+          <div><div className="hero-stat-num">156K</div><div className="hero-stat-label">регистрирани потребители</div></div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============ CATEGORIES ============ */
+function Categories({onSelect}){
+  return (
+    <section className="section">
+      <div className="container">
+        <div className="section-head">
+          <h2>Разгледайте по категория</h2>
+        </div>
+        <div className="cat-grid">
+          {CATEGORIES.map(c=>(
+            <div className="cat-card" key={c.id} onClick={()=>onSelect(c.id)} style={{cursor:'pointer'}}>
+              <div className="cat-icon" style={{background:c.color+'1a',color:c.color}}>
+                <Icon name={c.icon} size={21}/>
+              </div>
+              <h4>{c.name}</h4>
+              <p>{c.count || (120+c.id.length*30)} обяви</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ============ JOB CARD ============ */
+function JobCard({job,saved,onToggleSave,onOpen}){
+  return (
+    <div className="job-card" onClick={()=>onOpen(job)}>
+      <div className="job-logo" style={{background:job.companyColor}}>{job.companyInit}</div>
+      <div className="job-main">
+        <div className="job-top-row">
+          <div>
+            <div className="job-title">{job.title}</div>
+            <div className="job-company">{job.company} · {job.city}</div>
+          </div>
+          <div style={{display:'flex',gap:10,alignItems:'flex-start'}}>
+            <div style={{textAlign:'right'}}>
+              <div className="job-salary">{job.salaryMin.toLocaleString('bg-BG')} – {job.salaryMax.toLocaleString('bg-BG')} лв.</div>
+              <div className="job-salary-label">на месец</div>
+            </div>
+            <button
+              className={"save-btn"+(saved?' saved':'')}
+              onClick={(e)=>{e.stopPropagation();onToggleSave(job.id);}}
+              title={saved?'Премахни от запазени':'Запази обявата'}
+              aria-label="Запази обявата"
+            >
+              <Icon name="bookmark" size={16}/>
+            </button>
+          </div>
+        </div>
+        <div className="job-meta-row">
+          <div className="job-meta-item"><Icon name="briefcase" size={13}/>{job.type}</div>
+          <div className="job-meta-item"><Icon name="clock" size={13}/>{job.posted}</div>
+          <div className="job-meta-item"><Icon name="users" size={13}/>{job.experience}</div>
+        </div>
+        <div className="job-tags">
+          {job.isNew && <span className="tag tag-new">Ново</span>}
+          <span className="tag tag-type">{job.type}</span>
+          {job.isRemote && <span className="tag tag-remote">Дистанционно</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============ JOB LISTING PAGE ============ */
+function JobsPage({jobs,savedIds,onToggleSave,onOpen,initialKw,initialCity,loading}){
+  const [kw,setKw] = useState(initialKw||'');
+  const [city,setCity] = useState(initialCity||'Всички градове');
+  const [category,setCategory] = useState('Всички категории');
+  const [exp,setExp] = useState('Всяко ниво');
+  const [type,setType] = useState('Всички');
+  const [remoteOnly,setRemoteOnly] = useState(false);
+
+  useEffect(()=>{ setKw(initialKw||''); setCity(initialCity||'Всички градове'); },[initialKw,initialCity]);
+
+  const filtered = useMemo(()=>{
+    return jobs.filter(j=>{
+      if(kw && !(j.title.toLowerCase().includes(kw.toLowerCase()) || j.company.toLowerCase().includes(kw.toLowerCase()))) return false;
+      if(city!=='Всички градове' && j.city!==city) return false;
+      if(category!=='Всички категории' && j.category!==category) return false;
+      if(exp!=='Всяко ниво' && j.experience!==exp) return false;
+      if(type!=='Всички' && j.type!==type) return false;
+      if(remoteOnly && !j.isRemote) return false;
+      return true;
+    });
+  },[jobs,kw,city,category,exp,type,remoteOnly]);
+
+  return (
+    <div className="container section" style={{paddingTop:32}}>
+      <div className="breadcrumb">
+        <span>Начало</span><Icon name="chevronRight" size={12}/><span style={{color:'var(--ink)'}}>Обяви за работа</span>
+      </div>
+      <div className="page-title-row">
+        <div>
+          <h1>Обяви за работа</h1>
+          <div className="result-count">{filtered.length} намерени резултата</div>
+        </div>
+        <div className="search-field" style={{border:'1.5px solid var(--line)',borderRadius:9,background:'var(--paper)',minWidth:280}}>
+          <Icon name="search" size={16}/>
+          <input placeholder="Търси по длъжност или компания" value={kw} onChange={e=>setKw(e.target.value)}/>
+        </div>
+      </div>
+
+      <div className="job-layout">
+        <aside className="filters-box">
+          <h4><Icon name="filter" size={14} style={{verticalAlign:-2,marginRight:6}}/>Филтри</h4>
+
+          <div className="filter-group">
+            <label>Град</label>
+            <select className="filter-select" value={city} onChange={e=>setCity(e.target.value)}>
+              {CITIES.map(c=><option key={c}>{c}</option>)}
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Категория</label>
+            <select className="filter-select" value={category} onChange={e=>setCategory(e.target.value)}>
+              <option>Всички категории</option>
+              {CATEGORIES.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Опит</label>
+            <select className="filter-select" value={exp} onChange={e=>setExp(e.target.value)}>
+              {EXPERIENCE.map(c=><option key={c}>{c}</option>)}
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Тип заетост</label>
+            <select className="filter-select" value={type} onChange={e=>setType(e.target.value)}>
+              {JOB_TYPES.map(c=><option key={c}>{c}</option>)}
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>Условия</label>
+            <div className="checkbox-row">
+              <input type="checkbox" checked={remoteOnly} onChange={e=>setRemoteOnly(e.target.checked)} id="remoteChk"/>
+              <label htmlFor="remoteChk" style={{margin:0,fontSize:13.5,fontWeight:500,textTransform:'none',color:'var(--ink-soft)'}}>Само дистанционна работа</label>
+            </div>
+          </div>
+        </aside>
+
+        <div className="job-list">
+          {loading ? (
+            <div className="empty-state"><p>Зареждане на обяви...</p></div>
+          ) : filtered.length===0 ? (
+            <div className="empty-state">
+              <Icon name="search" size={38} style={{margin:'0 auto'}}/>
+              <h4>Няма намерени обяви</h4>
+              <p>Опитайте да промените филтрите или ключовите думи за търсене.</p>
+              <button className="btn btn-outline" onClick={()=>{setKw('');setCity('Всички градове');setCategory('Всички категории');setExp('Всяко ниво');setType('Всички');setRemoteOnly(false);}}>Изчисти филтрите</button>
+            </div>
+          ) : filtered.map(j=>(
+            <JobCard key={j.id} job={j} saved={savedIds.includes(j.id)} onToggleSave={onToggleSave} onOpen={onOpen}/>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============ JOB DETAIL MODAL ============ */
+function JobDetailModal({job,onClose,user,onOpenAuth,onApplied,applied}){
+  if(!job) return null;
+  const alreadyApplied = applied.includes(job.id);
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-box detail-modal" onClick={e=>e.stopPropagation()}>
+        <div className="detail-header">
+          <div className="job-logo" style={{background:job.companyColor,width:60,height:60,fontSize:19}}>{job.companyInit}</div>
+          <div style={{flex:1}}>
+            <h2 style={{fontSize:20,marginBottom:4}}>{job.title}</h2>
+            <div style={{fontSize:14,color:'var(--ink-soft)',fontWeight:600,marginBottom:10}}>{job.company} · {job.city}</div>
+            <div className="job-tags">
+              {job.isNew && <span className="tag tag-new">Ново</span>}
+              <span className="tag tag-type">{job.type}</span>
+              {job.isRemote && <span className="tag tag-remote">Дистанционно</span>}
+            </div>
+          </div>
+          <button className="modal-close" onClick={onClose} aria-label="Затвори"><Icon name="x" size={20}/></button>
+        </div>
+        <div className="detail-body">
+          <div style={{display:'flex',gap:24,padding:'4px 0 6px'}}>
+            <div>
+              <div style={{fontSize:11,color:'var(--ink-mute)',fontWeight:700,textTransform:'uppercase'}}>Заплащане</div>
+              <div style={{fontSize:16,fontWeight:800,color:'var(--navy)'}}>{job.salaryMin.toLocaleString('bg-BG')} – {job.salaryMax.toLocaleString('bg-BG')} лв.</div>
+            </div>
+            <div>
+              <div style={{fontSize:11,color:'var(--ink-mute)',fontWeight:700,textTransform:'uppercase'}}>Опит</div>
+              <div style={{fontSize:14,fontWeight:700,marginTop:2}}>{job.experience}</div>
+            </div>
+            <div>
+              <div style={{fontSize:11,color:'var(--ink-mute)',fontWeight:700,textTransform:'uppercase'}}>Публикувана</div>
+              <div style={{fontSize:14,fontWeight:700,marginTop:2}}>{job.posted}</div>
+            </div>
+          </div>
+
+          <h4>Описание на позицията</h4>
+          <p>{job.description}</p>
+
+          <h4>Отговорности</h4>
+          <ul>{job.responsibilities.map((r,i)=><li key={i}>{r}</li>)}</ul>
+
+          <h4>Изисквания</h4>
+          <ul>{job.requirements.map((r,i)=><li key={i}>{r}</li>)}</ul>
+
+          <h4>Какво предлагаме</h4>
+          <ul>{job.benefits.map((r,i)=><li key={i}>{r}</li>)}</ul>
+
+          <div className="detail-actions">
+            {alreadyApplied ? (
+              <button className="btn btn-outline btn-full" disabled style={{color:'var(--green)',borderColor:'var(--green)'}}>
+                <Icon name="checkCircle" size={16}/>Вече кандидатствахте
+              </button>
+            ) : user ? (
+              <button className="btn btn-coral btn-full btn-lg" onClick={()=>onApplied(job.id)}>Кандидатствай сега</button>
+            ) : (
+              <button className="btn btn-coral btn-full btn-lg" onClick={()=>onOpenAuth('register')}>Регистрирай се, за да кандидатстваш</button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============ AUTH MODAL ============ */
+function AuthModal({mode,onClose,onSwitch,onAuthSuccess}){
+  const [role,setRole] = useState('candidate');
+  const [name,setName] = useState('');
+  const [email,setEmail] = useState('');
+  const [password,setPassword] = useState('');
+  const [showPass,setShowPass] = useState(false);
+  const [errors,setErrors] = useState({});
+  const [submitting,setSubmitting] = useState(false);
+  const [submitted,setSubmitted] = useState(false);
+
+  const validate = () => {
+    const e = {};
+    if(mode==='register' && name.trim().length<2) e.name='Моля, въведете вашето име';
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) e.email='Въведете валиден имейл адрес';
+    if(password.length<6) e.password='Паролата трябва да е поне 6 символа';
+    return e;
+  };
+
+  const handleSubmit = async (ev) => {
+    ev.preventDefault();
+    const e = validate();
+    setErrors(e);
+    if(Object.keys(e).length>0) return;
+
+    setSubmitting(true);
+    try {
+      const data = mode==='register'
+        ? await api.register({name, email, password, role})
+        : await api.login({email, password});
+      setSubmitting(false);
+      setSubmitted(true);
+      setTimeout(()=>{ onAuthSuccess(data); }, 700);
+    } catch (err) {
+      setSubmitting(false);
+      setErrors({general: err.message});
+    }
+  };
+
+  if(submitted){
+    return (
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-box" onClick={e=>e.stopPropagation()} style={{padding:'10px 0'}}>
+          <div className="modal-body">
+            <div className="success-box">
+              <div className="success-icon"><Icon name="check" size={28}/></div>
+              <h3 style={{fontSize:19,marginBottom:6}}>{mode==='register'?'Профилът е създаден!':'Успешен вход!'}</h3>
+              <p style={{fontSize:13.5,color:'var(--ink-mute)'}}>Пренасочваме ви...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-box" onClick={e=>e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <div className="modal-title">{mode==='register'?'Създайте профил':'Влезте в профила си'}</div>
+            <div className="modal-sub">{mode==='register'?'Присъединете се безплатно за секунди':'Добре дошли отново в JumpStart'}</div>
+          </div>
+          <button className="modal-close" onClick={onClose} aria-label="Затвори"><Icon name="x" size={18}/></button>
+        </div>
+        <div className="modal-body">
+          {errors.general && (
+            <div className="form-err-msg" style={{background:'var(--coral-light)',color:'var(--coral-dark)',padding:'10px 12px',borderRadius:8,marginBottom:16,fontSize:13.5}}>
+              {errors.general}
+            </div>
+          )}
+          <form onSubmit={handleSubmit} noValidate>
+            {mode==='register' && (
+              <div className="role-toggle">
+                <div className={"role-opt"+(role==='candidate'?' active':'')} onClick={()=>setRole('candidate')} style={{cursor:'pointer'}}>
+                  <Icon name="user" size={18}/>
+                  <span>Търся работа</span>
+                </div>
+                <div className={"role-opt"+(role==='employer'?' active':'')} onClick={()=>setRole('employer')} style={{cursor:'pointer'}}>
+                  <Icon name="building" size={18}/>
+                  <span>Наемам служители</span>
+                </div>
+              </div>
+            )}
+
+            {mode==='register' && (
+              <div className="form-group">
+                <label>Пълно име</label>
+                <input className={"form-input"+(errors.name?' err':'')} placeholder="Име и фамилия" value={name} onChange={e=>setName(e.target.value)}/>
+                {errors.name && <div className="form-err-msg">{errors.name}</div>}
+              </div>
+            )}
+
+            <div className="form-group">
+              <label>Имейл адрес</label>
+              <input type="email" className={"form-input"+(errors.email?' err':'')} placeholder="ivan.petrov@email.bg" value={email} onChange={e=>setEmail(e.target.value)}/>
+              {errors.email && <div className="form-err-msg">{errors.email}</div>}
+            </div>
+
+            <div className="form-group">
+              <label>Парола</label>
+              <div style={{position:'relative'}}>
+                <input type={showPass?'text':'password'} className={"form-input"+(errors.password?' err':'')} placeholder="Минимум 6 символа" value={password} onChange={e=>setPassword(e.target.value)} style={{paddingRight:40}}/>
+                <button type="button" onClick={()=>setShowPass(!showPass)} style={{position:'absolute',right:10,top:9,color:'var(--ink-mute)'}} aria-label="Покажи паролата">
+                  <Icon name={showPass?'eyeOff':'eye'} size={17}/>
+                </button>
+              </div>
+              {errors.password && <div className="form-err-msg">{errors.password}</div>}
+              {mode==='register' && !errors.password && <div className="form-hint">Използвайте комбинация от букви и цифри</div>}
+            </div>
+
+            <button type="submit" className="btn btn-navy btn-full btn-lg" style={{marginTop:6}} disabled={submitting}>
+              {submitting ? 'Момент...' : (mode==='register'?'Създай безплатен профил':'Вход')}
+            </button>
+          </form>
+
+          <div className="modal-switch">
+            {mode==='register' ? (
+              <>Вече имате профил? <button onClick={()=>onSwitch('login')}>Влезте тук</button></>
+            ) : (
+              <>Нямате профил? <button onClick={()=>onSwitch('register')}>Регистрирайте се</button></>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============ POST JOB PAGE ============ */
+function PostJobPage({user,onOpenAuth,onPublish}){
+  const [form,setForm] = useState({title:'',company:user&&user.role==='employer'?user.name:'',city:'София',type:'Пълен работен ден',salaryMin:'',salaryMax:'',description:'',category:'it'});
+  const [posted,setPosted] = useState(false);
+  const [submitting,setSubmitting] = useState(false);
+  const [error,setError] = useState('');
+
+  const set = (k,v) => setForm(f=>({...f,[k]:v}));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if(!user){ onOpenAuth('register'); return; }
+    if(!form.title || !form.company || !form.description) return;
+    setSubmitting(true);
+    setError('');
+    try {
+      await onPublish(form);
+      setPosted(true);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if(posted){
+    return (
+      <div className="container section">
+        <div className="empty-state" style={{background:'var(--green-bg)',border:'1px dashed var(--green)',maxWidth:520,margin:'0 auto'}}>
+          <div className="success-icon" style={{margin:'0 auto 14px'}}><Icon name="check" size={26}/></div>
+          <h4>Обявата е публикувана успешно!</h4>
+          <p>Вашата обява вече е видима за хиляди кандидати в платформата.</p>
+          <button className="btn btn-navy" onClick={()=>setPosted(false)}>Публикувай друга обява</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container section" style={{paddingTop:32}}>
+      <div className="breadcrumb">
+        <span>Начало</span><Icon name="chevronRight" size={12}/><span style={{color:'var(--ink)'}}>Публикувай обява</span>
+      </div>
+      <div className="page-title-row">
+        <div>
+          <h1>Публикувайте обява за работа</h1>
+          <div className="result-count">Достигнете до над 156 000 активни кандидати</div>
+        </div>
+      </div>
+
+      <div className="post-layout">
+        <div className="post-form-card">
+          {!user && (
+            <div style={{background:'var(--coral-light)',border:'1px solid var(--coral)',borderRadius:10,padding:'12px 16px',marginBottom:22,display:'flex',justifyContent:'space-between',alignItems:'center',gap:12,flexWrap:'wrap'}}>
+              <span style={{fontSize:13.5,color:'var(--coral-dark)',fontWeight:600}}>Трябва да имате профил, за да публикувате обява.</span>
+              <button className="btn btn-coral btn-sm" onClick={()=>onOpenAuth('register')}>Регистрирай се</button>
+            </div>
+          )}
+          {error && (
+            <div style={{background:'var(--coral-light)',border:'1px solid var(--coral)',borderRadius:10,padding:'12px 16px',marginBottom:22,color:'var(--coral-dark)',fontSize:13.5,fontWeight:600}}>
+              {error}
+            </div>
+          )}
+          <h3>Детайли за позицията</h3>
+          <p style={{fontSize:13.5,color:'var(--ink-mute)',marginBottom:22}}>Попълнете информацията по-долу. Всички полета са задължителни.</p>
+
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Длъжност</label>
+              <input className="form-input" placeholder="напр. Senior Frontend разработчик" value={form.title} onChange={e=>set('title',e.target.value)} required/>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Име на компанията</label>
+                <input className="form-input" placeholder="Вашата компания ЕООД" value={form.company} onChange={e=>set('company',e.target.value)} required/>
+              </div>
+              <div className="form-group">
+                <label>Град</label>
+                <select className="form-input" value={form.city} onChange={e=>set('city',e.target.value)}>
+                  {CITIES.slice(1).map(c=><option key={c}>{c}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Категория</label>
+                <select className="form-input" value={form.category} onChange={e=>set('category',e.target.value)}>
+                  {CATEGORIES.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Тип заетост</label>
+                <select className="form-input" value={form.type} onChange={e=>set('type',e.target.value)}>
+                  {JOB_TYPES.slice(1).map(c=><option key={c}>{c}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="form-row">
+              <div className="form-group">
+                <label>Заплата от (лв.)</label>
+                <input type="number" className="form-input" placeholder="1500" value={form.salaryMin} onChange={e=>set('salaryMin',e.target.value)}/>
+              </div>
+              <div className="form-group">
+                <label>Заплата до (лв.)</label>
+                <input type="number" className="form-input" placeholder="2200" value={form.salaryMax} onChange={e=>set('salaryMax',e.target.value)}/>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label>Описание на позицията</label>
+              <textarea className="form-input" rows="6" placeholder="Опишете отговорностите, изискванията и предимствата на позицията..." value={form.description} onChange={e=>set('description',e.target.value)} required style={{resize:'vertical',fontFamily:'inherit'}}></textarea>
+            </div>
+
+            <button type="submit" className="btn btn-coral btn-lg" style={{marginTop:8}} disabled={submitting}>{submitting?'Публикуване...':'Публикувай обявата'}</button>
+          </form>
+        </div>
+
+        <div className="tip-card">
+          <h5>Съвети за успешна обява</h5>
+          <div className="tip-item"><Icon name="check" size={16}/><span>Посочете точен диапазон на заплатата — обявите с видима заплата получават 3× повече кандидатури.</span></div>
+          <div className="tip-item"><Icon name="check" size={16}/><span>Опишете ясно ежедневните задачи, за да привлечете подходящите хора.</span></div>
+          <div className="tip-item"><Icon name="check" size={16}/><span>Споменете екипната култура и бонусите — те влияят на решението на кандидата.</span></div>
+          <div className="tip-item"><Icon name="check" size={16}/><span>Отговаряйте бързо на кандидатурите, за да не изпуснете добрите таланти.</span></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============ SAVED / DASHBOARD PAGES ============ */
+function SavedJobsPage({savedJobs,onToggleSave,onOpen,loading}){
+  return (
+    <div className="container section" style={{paddingTop:32}}>
+      <div className="breadcrumb"><span>Начало</span><Icon name="chevronRight" size={12}/><span style={{color:'var(--ink)'}}>Запазени обяви</span></div>
+      <div className="page-title-row"><div><h1>Запазени обяви</h1><div className="result-count">{savedJobs.length} обяви</div></div></div>
+      {loading ? (
+        <div className="empty-state"><p>Зареждане...</p></div>
+      ) : savedJobs.length===0 ? (
+        <div className="empty-state">
+          <Icon name="bookmark" size={38} style={{margin:'0 auto'}}/>
+          <h4>Все още нямате запазени обяви</h4>
+          <p>Кликнете върху иконата с флагче на всяка обява, за да я запазите тук.</p>
+        </div>
+      ) : (
+        <div className="job-list">{savedJobs.map(j=><JobCard key={j.id} job={j} saved={true} onToggleSave={onToggleSave} onOpen={onOpen}/>)}</div>
+      )}
+    </div>
+  );
+}
+
+function DashboardPage({token,onOpen,refreshKey}){
+  const [myJobs,setMyJobs] = useState([]);
+  const [loading,setLoading] = useState(true);
+  const [error,setError] = useState('');
+
+  useEffect(()=>{
+    let cancelled = false;
+    setLoading(true);
+    api.myJobs(token).then(jobs=>{
+      if(!cancelled){ setMyJobs(hydrateJobs(jobs)); setLoading(false); }
+    }).catch(err=>{
+      if(!cancelled){ setError(err.message); setLoading(false); }
+    });
+    return ()=>{ cancelled = true; };
+  },[token,refreshKey]);
+
+  return (
+    <div className="container section" style={{paddingTop:32}}>
+      <div className="breadcrumb"><span>Начало</span><Icon name="chevronRight" size={12}/><span style={{color:'var(--ink)'}}>Моите обяви</span></div>
+      <div className="page-title-row"><div><h1>Публикувани от мен обяви</h1><div className="result-count">{myJobs.length} обяви</div></div></div>
+      {loading ? (
+        <div className="empty-state"><p>Зареждане...</p></div>
+      ) : error ? (
+        <div className="empty-state"><p>{error}</p></div>
+      ) : myJobs.length===0 ? (
+        <div className="empty-state">
+          <Icon name="fileText" size={38} style={{margin:'0 auto'}}/>
+          <h4>Все още нямате публикувани обяви</h4>
+          <p>Публикувайте първата си обява, за да достигнете до кандидати.</p>
+        </div>
+      ) : (
+        <div className="job-list">{myJobs.map(j=><JobCard key={j.id} job={j} saved={false} onToggleSave={()=>{}} onOpen={onOpen}/>)}</div>
+      )}
+    </div>
+  );
+}
+
+/* ============ FOOTER ============ */
+function Footer(){
+  return (
+    <footer>
+      <div className="container">
+        <div className="footer-grid">
+          <div>
+            <div className="footer-logo"><div className="logo-mark"><RocketJLogo/></div>Jump<span className="logo-sub">Start</span></div>
+            <p style={{fontSize:13.5,lineHeight:1.7,maxWidth:280}}>Водещата платформа за обяви за работа в България. Свързваме таланти с компании от 2024 година.</p>
+          </div>
+          <div className="footer-col">
+            <h5>За кандидати</h5>
+            <a href="#">Търсене на обяви</a>
+            <a href="#">Създай CV</a>
+            <a href="#">Кариерни съвети</a>
+            <a href="#">Заплати по професии</a>
+          </div>
+          <div className="footer-col">
+            <h5>За работодатели</h5>
+            <a href="#">Публикувай обява</a>
+            <a href="#">Ценови пакети</a>
+            <a href="#">База данни с CV-та</a>
+            <a href="#">Employer branding</a>
+          </div>
+          <div className="footer-col">
+            <h5>Компания</h5>
+            <a href="#">За нас</a>
+            <a href="#">Контакти</a>
+            <a href="#">Условия за ползване</a>
+            <a href="#">Поверителност</a>
+          </div>
+        </div>
+        <div className="footer-bottom">
+          <span>© 2026 JumpStart. Всички права запазени.</span>
+          <span>Направено с грижа в София, България</span>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+/* ============ APP ROOT ============ */
+function App(){
+  const [jobs,setJobs] = useState([]);
+  const [jobsLoading,setJobsLoading] = useState(true);
+  const [jobsError,setJobsError] = useState('');
+  const [page,setPage] = useState('home');
+  const [user,setUser] = useState(null);
+  const [token,setToken] = useState(null);
+  const [authMode,setAuthMode] = useState(null);
+  const [selectedJob,setSelectedJob] = useState(null);
+  const [savedJobs,setSavedJobs] = useState([]);
+  const [applied,setApplied] = useState([]);
+  const [toast,setToast] = useState(null);
+  const [searchKw,setSearchKw] = useState('');
+  const [searchCity,setSearchCity] = useState('Всички градове');
+  const [dashboardRefreshKey,setDashboardRefreshKey] = useState(0);
+
+  const savedIds = useMemo(()=>savedJobs.map(j=>j.id),[savedJobs]);
+
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(()=>setToast(null),2600);
+  };
+
+  // Load the public job list once on mount.
+  useEffect(()=>{
+    let cancelled = false;
+    api.listJobs().then(list=>{
+      if(!cancelled){ setJobs(hydrateJobs(list)); setJobsLoading(false); }
+    }).catch(err=>{
+      if(!cancelled){ setJobsError(err.message); setJobsLoading(false); }
+    });
+    return ()=>{ cancelled = true; };
+  },[]);
+
+  // Restore a logged-in session from a saved token (e.g. after a page refresh).
+  useEffect(()=>{
+    const saved = safeStorage.get('jumpstart_token');
+    if(!saved) return;
+    let cancelled = false;
+    api.me(saved).then(u=>{
+      if(cancelled) return;
+      setUser(u);
+      setToken(saved);
+      return refreshUserData(saved);
+    }).catch(()=>{
+      safeStorage.remove('jumpstart_token');
+    });
+    return ()=>{ cancelled = true; };
+  },[]);
+
+  // Pulls the logged-in user's applications + saved jobs from the server.
+  const refreshUserData = async (tok) => {
+    try {
+      const [appliedIds, saved] = await Promise.all([api.myApplications(tok), api.mySavedJobs(tok)]);
+      setApplied(appliedIds);
+      setSavedJobs(hydrateJobs(saved));
+    } catch (err) {
+      // Non-fatal: user stays logged in even if this background sync fails.
+      console.error('Failed to refresh user data:', err);
+    }
+  };
+
+  const handleSearch = (kw,city) => {
+    setSearchKw(kw);
+    setSearchCity(city);
+    setPage('jobs');
+    window.scrollTo({top:0,behavior:'smooth'});
+  };
+
+  const handleCategorySelect = (catId) => {
+    setSearchKw('');
+    setSearchCity('Всички градове');
+    setPage('jobs');
+  };
+
+  const toggleSave = async (id) => {
+    if(!user || !token){ setAuthMode('register'); return; }
+    const isSaved = savedIds.includes(id);
+    try {
+      if(isSaved) await api.unsaveJob(token, id);
+      else await api.saveJob(token, id);
+      const fresh = await api.mySavedJobs(token);
+      setSavedJobs(hydrateJobs(fresh));
+    } catch (err) {
+      showToast(err.message);
+    }
+  };
+
+  const handleApply = async (id) => {
+    if(!user || !token){ setAuthMode('register'); return; }
+    try {
+      await api.applyToJob(token, id);
+      setApplied(prev=>prev.includes(id)?prev:[...prev,id]);
+      showToast('Кандидатурата ви беше изпратена успешно!');
+    } catch (err) {
+      showToast(err.message);
+    } finally {
+      setSelectedJob(null);
+    }
+  };
+
+  const handleAuthSuccess = (data) => {
+    setUser(data.user);
+    setToken(data.token);
+    safeStorage.set('jumpstart_token', data.token);
+    setAuthMode(null);
+    showToast(`Добре дошли, ${data.user.name.split(' ')[0]}!`);
+    refreshUserData(data.token);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setToken(null);
+    setApplied([]);
+    setSavedJobs([]);
+    safeStorage.remove('jumpstart_token');
+    showToast('Излязохте от профила си.');
+    setPage('home');
+  };
+
+  const handlePublishJob = async (form) => {
+    const job = await api.createJob(token, form);
+    setJobs(prev=>[hydrateJob(job), ...prev]);
+    setDashboardRefreshKey(k=>k+1);
+    showToast('Обявата е публикувана успешно!');
+  };
+
+  return (
+    <div>
+      <Header
+        user={user}
+        onOpenAuth={setAuthMode}
+        onLogout={handleLogout}
+        onGoHome={()=>setPage('home')}
+        onGoPost={()=>setPage('post')}
+        onGoJobs={()=>{setSearchKw('');setSearchCity('Всички градове');setPage('jobs');}}
+        onGoSaved={()=>setPage('saved')}
+        onGoDashboard={()=>setPage('dashboard')}
+      />
+
+      {page==='home' && (
+        <>
+          <Hero onSearch={handleSearch}/>
+          <Categories onSelect={handleCategorySelect}/>
+          <div className="employers-strip">
+            <div className="container">
+              <div className="strip-label">На нас се доверяват водещи компании в България</div>
+              <div className="logo-strip">
+                {COMPANIES.slice(0,6).map(c=><span key={c.name} className="strip-logo">{c.name}</span>)}
+              </div>
+            </div>
+          </div>
+          <section className="section">
+            <div className="container">
+              <div className="section-head">
+                <h2>Най-нови обяви</h2>
+                <a href="#" className="see-all" onClick={(e)=>{e.preventDefault();setPage('jobs');}}>Виж всички<Icon name="chevronRight" size={14}/></a>
+              </div>
+              {jobsLoading ? (
+                <p style={{color:'var(--ink-mute)'}}>Зареждане на обяви...</p>
+              ) : jobsError ? (
+                <p style={{color:'var(--coral-dark)'}}>{jobsError}</p>
+              ) : (
+                <div className="job-list">
+                  {jobs.slice(0,6).map(j=>(
+                    <JobCard key={j.id} job={j} saved={savedIds.includes(j.id)} onToggleSave={toggleSave} onOpen={setSelectedJob}/>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+          <div className="container" style={{paddingBottom:60}}>
+            <div className="cta-band">
+              <div>
+                <h3>Наемате ли служители в момента?</h3>
+                <p>Публикувайте обява безплатно и достигнете до хиляди активни кандидати още днес.</p>
+              </div>
+              <div className="cta-band-actions">
+                <button className="btn btn-coral btn-lg" onClick={()=>setPage('post')}>Публикувай обява</button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {page==='jobs' && (
+        <JobsPage jobs={jobs} savedIds={savedIds} onToggleSave={toggleSave} onOpen={setSelectedJob} initialKw={searchKw} initialCity={searchCity} loading={jobsLoading}/>
+      )}
+
+      {page==='post' && (
+        <PostJobPage user={user} onOpenAuth={setAuthMode} onPublish={handlePublishJob}/>
+      )}
+
+      {page==='saved' && (
+        <SavedJobsPage savedJobs={savedJobs} onToggleSave={toggleSave} onOpen={setSelectedJob}/>
+      )}
+
+      {page==='dashboard' && (
+        <DashboardPage token={token} onOpen={setSelectedJob} refreshKey={dashboardRefreshKey}/>
+      )}
+
+      <Footer/>
+
+      {selectedJob && (
+        <JobDetailModal
+          job={selectedJob}
+          onClose={()=>setSelectedJob(null)}
+          user={user}
+          onOpenAuth={(m)=>{setSelectedJob(null);setAuthMode(m);}}
+          onApplied={handleApply}
+          applied={applied}
+        />
+      )}
+
+      {authMode && (
+        <AuthModal
+          mode={authMode}
+          onClose={()=>setAuthMode(null)}
+          onSwitch={setAuthMode}
+          onAuthSuccess={handleAuthSuccess}
+        />
+      )}
+
+      {toast && (
+        <div className="toast"><Icon name="checkCircle" size={16}/>{toast}</div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
