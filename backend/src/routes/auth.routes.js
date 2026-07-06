@@ -1,5 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const rateLimit = require('express-rate-limit');
 const db = require('../db');
 const { signToken } = require('../utils/jwt');
 const { requireAuth } = require('../middleware/auth');
@@ -8,11 +9,22 @@ const router = express.Router();
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// Slows down credential-stuffing / brute-force attempts against auth
+// endpoints without affecting normal use (20 tries per IP per 15 min is
+// far more than any real user needs).
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Твърде много опити. Опитайте отново след няколко минути.' },
+});
+
 function publicUser(row) {
   return { id: row.id, name: row.name, email: row.email, role: row.role };
 }
 
-router.post('/register', async (req, res) => {
+router.post('/register', authLimiter, async (req, res) => {
   const { name, email, password, role } = req.body || {};
 
   if (!name || String(name).trim().length < 2) {
@@ -53,7 +65,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) {
     return res.status(400).json({ error: 'Въведете имейл и парола.' });
