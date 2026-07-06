@@ -47,9 +47,25 @@ CREATE TABLE IF NOT EXISTS saved_jobs (
   UNIQUE(user_id, job_id)
 );
 
+CREATE TABLE IF NOT EXISTS cvs (
+  id          SERIAL PRIMARY KEY,
+  user_id     INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  full_name   VARCHAR(255) NOT NULL DEFAULT '',
+  email       VARCHAR(255) NOT NULL DEFAULT '',
+  phone       VARCHAR(60)  NOT NULL DEFAULT '',
+  city        VARCHAR(100) NOT NULL DEFAULT '',
+  summary     TEXT         NOT NULL DEFAULT '',
+  skills      JSONB        NOT NULL DEFAULT '[]',
+  experience  JSONB        NOT NULL DEFAULT '[]',
+  education   JSONB        NOT NULL DEFAULT '[]',
+  languages   JSONB        NOT NULL DEFAULT '[]',
+  updated_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+
 CREATE INDEX IF NOT EXISTS idx_jobs_category   ON jobs(category);
 CREATE INDEX IF NOT EXISTS idx_jobs_city        ON jobs(city);
 CREATE INDEX IF NOT EXISTS idx_jobs_owner       ON jobs(owner_id);
 CREATE INDEX IF NOT EXISTS idx_jobs_created_at  ON jobs(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_apps_user        ON applications(user_id);
 CREATE INDEX IF NOT EXISTS idx_saved_user       ON saved_jobs(user_id);
+CREATE INDEX IF NOT EXISTS idx_cvs_user         ON cvs(user_id);

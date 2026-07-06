@@ -8,6 +8,7 @@ const authRoutes = require('./routes/auth.routes');
 const jobsRoutes = require('./routes/jobs.routes');
 const applicationsRoutes = require('./routes/applications.routes');
 const savedRoutes = require('./routes/saved.routes');
+const cvRoutes = require('./routes/cv.routes');
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobsRoutes);
 app.use('/api/applications', applicationsRoutes);
 app.use('/api/saved', savedRoutes);
+app.use('/api/cv', cvRoutes);
 
 // 404 for unknown API routes
 app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));

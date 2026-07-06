@@ -24,13 +24,33 @@
     --ink-mute:#8C8A7E;
     --green:#2E7D4F;
     --green-bg:#E7F3EB;
+    --accent:var(--navy);
+    --coral-text:var(--coral-text);
     --radius:10px;
     --shadow:0 1px 2px rgba(28,27,23,0.06);
     --shadow-md:0 4px 16px rgba(22,35,63,0.08);
     --shadow-lg:0 16px 48px rgba(22,35,63,0.18);
   }
+  html[data-theme="dark"]{
+    --coral-light:rgba(232,98,44,0.16);
+    --coral-text:#FF9C6B;
+    --cream:#101218;
+    --paper:#1B1E27;
+    --line:#2B2F3B;
+    --line-strong:#3D4250;
+    --ink:#EDEDEA;
+    --ink-soft:#B8B6AE;
+    --ink-mute:#84827A;
+    --green:#4ADE94;
+    --green-bg:rgba(46,125,79,0.2);
+    --accent:#7C93FF;
+    --shadow:0 1px 2px rgba(0,0,0,0.4);
+    --shadow-md:0 4px 16px rgba(0,0,0,0.45);
+    --shadow-lg:0 16px 48px rgba(0,0,0,0.6);
+  }
   *{box-sizing:border-box;margin:0;padding:0;}
   html{scroll-behavior:smooth;}
+  *{transition:background-color .25s ease,border-color .25s ease,color .25s ease;}
   body{
     font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;
     background:var(--cream);
@@ -43,7 +63,7 @@
   a{color:inherit;text-decoration:none;}
   button{font-family:inherit;cursor:pointer;border:none;background:none;}
   input,select,textarea{font-family:inherit;}
-  ::selection{background:var(--coral-light);color:var(--coral-dark);}
+  ::selection{background:var(--coral-light);color:var(--coral-text);}
 
   .container{max-width:1180px;margin:0 auto;padding:0 24px;}
 
@@ -62,14 +82,13 @@
     font-size:22px;font-weight:800;color:#fff;
   }
   .logo-mark{
-    width:36px;height:44px;
+    width:38px;height:44px;
     display:flex;align-items:center;justify-content:center;
     flex-shrink:0;
   }
-  .logo-mark svg{width:100%;height:100%;display:block;}
-  .logo .logo-mark{width:74px;height:68px;}
+  .logo-mark img{width:100%;height:100%;display:block;object-fit:contain;}
+  .logo .logo-mark{width:58px;height:68px;}
   .logo{gap:14px;}
-  .logo-sub{font-style:italic;}
   nav.main-nav{display:flex;gap:28px;align-items:center;}
   .nav-link{
     color:rgba(255,255,255,0.72);
@@ -111,6 +130,23 @@
     background:var(--coral);color:#fff;
     display:flex;align-items:center;justify-content:center;
     font-size:11px;font-weight:800;flex-shrink:0;
+  }
+
+  .theme-toggle{
+    width:38px;height:38px;border-radius:50%;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.2);
+    color:#fff;
+    transition:background .15s,transform .15s;
+  }
+  .theme-toggle:hover{background:rgba(255,255,255,0.16);}
+  .theme-toggle:active{transform:scale(0.85);}
+  .theme-toggle-icon{display:flex;animation:themeIconPop .45s cubic-bezier(.34,1.56,.64,1);}
+  @keyframes themeIconPop{
+    0%{transform:rotate(-95deg) scale(0.3);opacity:0;}
+    60%{transform:rotate(10deg) scale(1.2);opacity:1;}
+    100%{transform:rotate(0) scale(1);opacity:1;}
   }
 
   /* ===== HERO ===== */
@@ -165,6 +201,20 @@
   .search-field select{cursor:pointer;}
   .search-divider{width:1px;background:var(--line);align-self:center;height:28px;}
 
+  /* ===== CITY SEARCH SELECT ===== */
+  .city-select{position:relative;}
+  .search-field .city-select{flex:1;min-width:0;}
+  .city-select-dropdown{
+    position:absolute;top:calc(100% + 6px);left:0;right:0;
+    background:var(--paper);border:1px solid var(--line);border-radius:10px;
+    box-shadow:var(--shadow-lg);max-height:260px;overflow-y:auto;
+    z-index:50;padding:6px;
+  }
+  .city-select-option{padding:9px 12px;border-radius:7px;font-size:14px;color:var(--ink);cursor:pointer;}
+  .city-select-option:hover{background:var(--cream);}
+  .city-select-option.active{background:var(--coral-light);color:var(--coral-text);font-weight:700;}
+  .city-select-empty{padding:9px 12px;font-size:13px;color:var(--ink-mute);}
+
   .hero-stats{
     display:flex;gap:36px;margin-top:30px;
   }
@@ -205,7 +255,7 @@
   .cat-card:hover{border-color:var(--coral);box-shadow:var(--shadow-md);transform:translateY(-2px);}
   .cat-icon{
     width:42px;height:42px;border-radius:10px;
-    background:var(--coral-light);color:var(--coral-dark);
+    background:var(--coral-light);color:var(--coral-text);
     display:flex;align-items:center;justify-content:center;
     margin-bottom:14px;
   }
@@ -232,7 +282,7 @@
     border-radius:8px;font-size:13.5px;background:var(--paper);
     color:var(--ink);
   }
-  .filter-select:focus{outline:none;border-color:var(--navy);}
+  .filter-select:focus{outline:none;border-color:var(--accent);}
   .checkbox-row{display:flex;align-items:center;gap:8px;margin-bottom:9px;font-size:13.5px;color:var(--ink-soft);}
   .checkbox-row input{width:16px;height:16px;accent-color:var(--coral);}
 
@@ -252,7 +302,7 @@
   .job-main{flex:1;min-width:0;}
   .job-top-row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;}
   .job-title{font-size:16.5px;font-weight:700;margin-bottom:3px;}
-  .job-title:hover{color:var(--coral-dark);}
+  .job-title:hover{color:var(--coral-text);}
   .job-company{font-size:13.5px;color:var(--ink-soft);font-weight:600;}
   .job-meta-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:11px;}
   .job-meta-item{
@@ -265,9 +315,9 @@
   }
   .tag-type{background:var(--green-bg);color:var(--green);}
   .tag-remote{background:#E8EEFB;color:#2451A3;}
-  .tag-new{background:var(--coral-light);color:var(--coral-dark);}
+  .tag-new{background:var(--coral-light);color:var(--coral-text);}
   .job-salary{
-    font-size:14.5px;font-weight:800;color:var(--navy);
+    font-size:14.5px;font-weight:800;color:var(--accent);
     white-space:nowrap;text-align:right;
   }
   .job-salary-label{font-size:11px;color:var(--ink-mute);font-weight:600;margin-top:2px;}
@@ -279,7 +329,7 @@
     transition:all .15s;
   }
   .save-btn:hover{border-color:var(--coral);color:var(--coral);}
-  .save-btn.saved{background:var(--coral-light);border-color:var(--coral);color:var(--coral-dark);}
+  .save-btn.saved{background:var(--coral-light);border-color:var(--coral);color:var(--coral-text);}
 
   .empty-state{
     text-align:center;padding:60px 20px;
@@ -353,7 +403,7 @@
     border-radius:8px;font-size:14.5px;color:var(--ink);
     transition:border-color .15s;background:var(--paper);
   }
-  .form-input:focus{outline:none;border-color:var(--navy);}
+  .form-input:focus{outline:none;border-color:var(--accent);}
   .form-input.err{border-color:#C0392B;}
   .form-err-msg{font-size:12px;color:#C0392B;margin-top:5px;font-weight:600;}
   .form-hint{font-size:12px;color:var(--ink-mute);margin-top:5px;}
@@ -393,6 +443,13 @@
   .detail-body p{font-size:14.5px;color:var(--ink-soft);line-height:1.7;}
   .detail-body ul{padding-left:20px;margin-top:8px;}
   .detail-body li{font-size:14.5px;color:var(--ink-soft);line-height:1.9;}
+
+  /* ===== STATIC INFO PAGES ===== */
+  .info-table{margin-top:6px;}
+  .info-table-row{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px;}
+  .info-table-row:last-child{border-bottom:none;}
+  .info-table-key{color:var(--ink-soft);font-weight:600;}
+  .info-table-value{color:var(--ink);font-weight:700;}
   .detail-actions{display:flex;gap:10px;margin-top:26px;padding-top:22px;border-top:1px solid var(--line);}
 
   /* ===== POST JOB PAGE ===== */
@@ -421,6 +478,23 @@
   .page-title-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
   .page-title-row h1{font-size:26px;}
   .result-count{font-size:14px;color:var(--ink-mute);margin-top:4px;}
+
+  /* ===== CV BUILDER ===== */
+  .cv-page-layout{max-width:760px;}
+  .cv-page-layout h3{font-size:17px;margin-bottom:16px;}
+  .chip-input-row{display:flex;gap:8px;}
+  .chip-input-row .form-input{flex:1;}
+  .cv-chip{
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--coral-light);color:var(--coral-text);
+    padding:5px 10px;border-radius:999px;font-size:12.5px;font-weight:700;
+  }
+  .cv-chip button{color:var(--coral-text);display:flex;}
+  .cv-chip.cv-chip-static{padding:5px 12px;}
+  .cv-entry{border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:14px;background:var(--cream);}
+  .cv-entry-title{font-weight:700;font-size:14.5px;}
+  .cv-entry-sub{font-size:12.5px;color:var(--ink-mute);margin:2px 0 8px;}
+  .cv-view-header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:20px;flex-wrap:wrap;}
 
   @media (max-width:900px){
     .container{padding:0 16px;}
@@ -481,6 +555,8 @@ const Icon = ({name,size=18,...props}) => {
     logout: <><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></>,
     globe: <><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></>,
     fileText: <><path d="M6 2h9l5 5v13a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2z"/><path d="M8 12h8M8 16h8M8 8h3"/></>,
+    sun: <><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.22 4.22l1.77 1.77M17.99 17.99l1.77 1.77M2 12h2.5M19.5 12H22M4.22 19.78l1.77-1.77M17.99 6.01l1.77-1.77"/></>,
+    moon: <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>,
   };
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{paths[name]}</svg>;
 };
@@ -497,7 +573,7 @@ const CATEGORIES = [
   {id:'customer',name:'Обслужване на клиенти',icon:'heart',color:'#E67E22'},
 ];
 
-const CITIES = ['Всички градове','София','Пловдив','Варна','Бургас','Русе','Стара Загора','Плевен'];
+const CITIES = ['Всички градове','Айтос','Аксаково','Алфатар','Антоново','Априлци','Ардино','Асеновград','Ахелой','Ахтопол','Балчик','Банкя','Банско','Баня','Батак','Батановци','Белене','Белица','Белово','Белоградчик','Белослав','Берковица','Благоевград','Бобов дол','Бобошево','Божурище','Бойчиновци','Болярово','Борово','Ботевград','Брацигово','Брегово','Брезник','Брезово','Брусарци','Бургас','Бухово','Българово','Бяла','Бяла Слатина','Бяла черква','Варна','Велики Преслав','Велико Търново','Велинград','Ветово','Ветрен','Видин','Враца','Вълчедръм','Вълчи дол','Върбица','Вършец','Габрово','Генерал Тошево','Главиница','Глоджево','Годеч','Горна Оряховица','Гоце Делчев','Грамада','Гулянци','Гурково','Гълъбово','Две могили','Дебелец','Девин','Девня','Джебел','Димитровград','Димово','Добринище','Добрич','Долна баня','Долна Митрополия','Долна Оряховица','Долни Дъбник','Долни чифлик','Доспат','Драгоман','Дряново','Дулово','Дунавци','Дупница','Дългопол','Елена','Елин Пелин','Елхово','Етрополе','Завет','Земен','Златарица','Златица','Златоград','Ивайловград','Игнатиево','Искър','Исперих','Ихтиман','Каблешково','Каварна','Казанлък','Калофер','Камено','Каолиново','Карлово','Карнобат','Каспичан','Кермен','Килифарево','Китен','Клисура','Кнежа','Козлодуй','Койнаре','Копривщица','Костандово','Костенец','Костинброд','Котел','Кочериново','Кресна','Криводол','Кричим','Крумовград','Крън','Кубрат','Куклен','Кула','Кърджали','Кюстендил','Левски','Летница','Ловеч','Лозница','Лом','Луковит','Лъки','Любимец','Лясковец','Мадан','Маджарово','Малко Търново','Мартен','Мелник','Меричлери','Мизия','Момин проход','Момчилград','Монтана','Мъглиж','Неделино','Несебър','Николаево','Никопол','Нова Загора','Нови Искър','Нови пазар','Обзор','Омуртаг','Опака','Оряхово','Павел баня','Павликени','Пазарджик','Панагюрище','Перник','Перущица','Петрич','Пещера','Пирдоп','Плачковци','Плевен','Плиска','Пловдив','Полски Тръмбеш','Поморие','Попово','Пордим','Правец','Приморско','Провадия','Първомай','Раднево','Радомир','Разград','Разлог','Ракитово','Раковски','Рила','Роман','Рудозем','Русе','Садово','Самоков','Сандански','Сапарева баня','Свети Влас','Свиленград','Свищов','Своге','Севлиево','Сеново','Септември','Силистра','Симеоновград','Симитли','Славяново','Сливен','Сливница','Сливо поле','Смолян','Смядово','Созопол','Сопот','София','Средец','Стамболийски','Стара Загора','Стражица','Стралджа','Стрелча','Суворово','Сунгурларе','Сухиндол','Съединение','Сърница','Твърдица','Тервел','Тетевен','Тополовград','Троян','Трън','Тръстеник','Трявна','Тутракан','Търговище','Угърчин','Хаджидимово','Харманли','Хасково','Хисаря','Цар Калоян','Царево','Чепеларе','Червен бряг','Черноморец','Чипровци','Чирпан','Шабла','Шивачево','Шипка','Шумен','Ябланица','Якоруда','Ямбол'];
 const EXPERIENCE = ['Всяко ниво','Без опит','1-3 години','3-5 години','Над 5 години'];
 const JOB_TYPES = ['Всички','Пълен работен ден','Непълен работен ден','Дистанционна работа','Стаж','Хоно­рар'];
 
@@ -511,6 +587,120 @@ const COMPANIES = [
   {name:'Креативна Агенция Вижън',color:'#E67E22',init:'КВ'},
   {name:'ИндустриалСтрой ЕАД',color:'#2980B9',init:'ИС'},
 ];
+
+/* ============ STATIC INFO PAGES ============ */
+const STATIC_PAGES = {
+  'career-tips': {
+    title: 'Кариерни съвети',
+    subtitle: 'Практични насоки, които да ви помогнат да намерите следващата си роля',
+    blocks: [
+      {h:'Подгответе CV, което се откроява'},
+      {p:'Използвайте ясна структура, конкретни постижения с цифри и адаптирайте автобиографията си според позицията, за която кандидатствате. Вграденият CV конструктор в профила ви ("Моето CV") помага да го направите бързо, без отделен файл.'},
+      {h:'Подготовка за интервю'},
+      {p:'Проучете компанията предварително, подгответе въпроси към интервюиращия и репетирайте отговори на често срещани въпроси за опита си.'},
+      {h:'Следете статуса на кандидатурите си'},
+      {p:'След като кандидатствате за обява през JumpStart, ще виждате статуса в секция "Запазени обяви" и профила си.'},
+      {h:'Кандидатствайте на няколко места едновременно'},
+      {p:'Не чакайте отговор на една-единствена обява — кандидатстването за няколко подходящи позиции наведнъж увеличава шанса ви за интервю в разумен срок.'},
+    ],
+  },
+  'salaries': {
+    title: 'Заплати по професии',
+    subtitle: 'Ориентировъчни диапазони на база обявите, публикувани в JumpStart',
+    blocks: [
+      {table:[
+        ['ИТ и разработка','2200 – 5500 лв.'],
+        ['Продажби','1500 – 3200 лв.'],
+        ['Дизайн','1800 – 3800 лв.'],
+        ['Логистика','1400 – 2600 лв.'],
+        ['Административни','1300 – 2200 лв.'],
+        ['Здравеопазване','1600 – 3000 лв.'],
+        ['Човешки ресурси','1700 – 3100 лв.'],
+        ['Обслужване на клиенти','1300 – 2100 лв.'],
+      ]},
+      {p:'Данните са ориентировъчни и се базират на диапазоните на заплатите в публикуваните обяви. Реалното възнаграждение зависи от опит, локация и конкретния работодател.'},
+    ],
+  },
+  'pricing': {
+    title: 'Ценови пакети за работодатели',
+    subtitle: 'Изберете варианта, който пасва на нуждите на вашия бизнес',
+    blocks: [
+      {h:'Безплатен — 0 лв.'},
+      {p:'1 активна обява, базов профил на компанията, достъп до получените кандидатури.'},
+      {h:'Стандартен — за растящи екипи'},
+      {p:'До 10 активни обяви, обявите се открояват с таг "Препоръчана" и получават приоритет в резултатите от търсене.'},
+      {h:'Премиум — за агенции и големи компании'},
+      {p:'Неограничен брой обяви, достъп до база с CV-та, employer branding поддръжка и личен акаунт мениджър.'},
+      {p:'За преминаване към платен пакет се свържете с нас през страница "Контакти".'},
+    ],
+  },
+  'cv-database': {
+    title: 'База данни с CV-та',
+    subtitle: 'Открийте таланти, преди да са кандидатствали',
+    blocks: [
+      {p:'Вместо да чакате подходящият кандидат да кандидатства за вашата обява, търсете директно сред автобиографиите, създадени от активни търсещи работа в JumpStart — филтрирани по умения, опит и локация.'},
+      {p:'Достъпът до базата с CV-та е включен в пакети "Стандартен" и "Премиум". Пишете ни през страница "Контакти", за да получите ранен достъп.'},
+    ],
+  },
+  'employer-branding': {
+    title: 'Employer Branding',
+    subtitle: 'Изградете разпознаваем работодателски бранд в JumpStart',
+    blocks: [
+      {p:'Открояващ се профил на компанията с лого, снимки от офиса и описание на екипната култура — за да кандидатите ви разпознават и избират пред конкуренцията.'},
+      {p:'Включва: разширен фирмен профил, поставяне на банер в подбрани категории и препоръчани обяви в резултатите от търсене.'},
+      {p:'Част е от пакет "Премиум" — вижте "Ценови пакети" за повече информация.'},
+    ],
+  },
+  'about': {
+    title: 'За нас',
+    subtitle: 'Мисията на JumpStart',
+    blocks: [
+      {p:'JumpStart е платформа за обяви за работа в България, създадена през 2024 година с една проста цел — да свърже хората, търсещи работа, с компаниите, които наемат, възможно най-бързо и без излишни усложнения.'},
+      {p:'Вярваме, че намирането на следваща роля не трябва да отнема месеци. Затова изградихме инструменти като вграден CV конструктор, лесно кандидатстване с едно кликване и прозрачни обяви със заплата от самото начало.'},
+      {p:'Екипът ни е базиран в София и работи всеки ден, за да прави пазара на труда в България по-достъпен — както за кандидати, така и за работодатели от всякакъв мащаб.'},
+    ],
+  },
+  'contact': {
+    title: 'Контакти',
+    subtitle: 'Свържете се с нас',
+    blocks: [
+      {p:'Имате въпрос, обратна връзка или искате да преминете към платен пакет за работодатели? Пишете ни — отговаряме в рамките на 1-2 работни дни.'},
+      {table:[
+        ['Имейл','contact@jumpstart.bg'],
+        ['Телефон','+359 2 123 4567'],
+        ['Адрес','гр. София, България'],
+      ]},
+    ],
+  },
+  'terms': {
+    title: 'Условия за ползване',
+    subtitle: 'Последна актуализация: януари 2026 г.',
+    blocks: [
+      {h:'1. Общи условия'},
+      {p:'С регистрацията и използването на JumpStart вие се съгласявате с настоящите условия. Платформата се предоставя "както е", а ние полагаме грижа информацията в обявите да е коректна, но не носим отговорност за съдържанието, публикувано от работодатели.'},
+      {h:'2. Използване на платформата'},
+      {p:'Потребителите се задължават да предоставят вярна информация при регистрация и да не публикуват подвеждащо или незаконно съдържание — включително фалшиви обяви за работа или автобиографии.'},
+      {h:'3. Отговорност'},
+      {p:'JumpStart действа като посредник между кандидати и работодатели. Крайното решение за наемане или приемане на работа е изцяло между двете страни.'},
+      {h:'4. Промени в условията'},
+      {p:'Запазваме си правото да актуализираме тези условия. Съществени промени ще бъдат отразени на тази страница с нова дата на актуализация.'},
+    ],
+  },
+  'privacy': {
+    title: 'Политика за поверителност',
+    subtitle: 'Последна актуализация: януари 2026 г.',
+    blocks: [
+      {h:'Какви данни събираме'},
+      {p:'Име, имейл адрес и парола (съхранявана хеширана) при регистрация, както и съдържанието на CV-то и обявите, които създавате доброволно.'},
+      {h:'Как ги използваме'},
+      {p:'Данните се използват единствено за функционирането на платформата — вход в профила, показване на кандидатури, запазени обяви и публикувани позиции. Не продаваме лични данни на трети страни.'},
+      {h:'Права на потребителите'},
+      {p:'Можете да поискате преглед, корекция или изтриване на профила и данните си по всяко време, като се свържете с нас през страница "Контакти".'},
+      {h:'Въпроси относно поверителността'},
+      {p:'При въпроси, пишете на contact@jumpstart.bg.'},
+    ],
+  },
+};
 
 /* ============ API CLIENT ============ */
 // Point this at your deployed backend (see /backend in the project you
@@ -567,6 +757,8 @@ const api = {
   register: (payload) => apiFetch('/auth/register', { method: 'POST', body: payload }),
   login: (payload) => apiFetch('/auth/login', { method: 'POST', body: payload }),
   me: (token) => apiFetch('/auth/me', { token }).then(d => d.user),
+  getCv: (token) => apiFetch('/cv', { token }).then(d => d.cv),
+  saveCv: (token, payload) => apiFetch('/cv', { method: 'PUT', token, body: payload }).then(d => d.cv),
 };
 
 // The backend stores raw timestamps; these turn them into the same
@@ -591,43 +783,98 @@ function hydrateJobs(jobs) { return jobs.map(hydrateJob); }
 
 /* ============ LOGO ============ */
 function RocketJLogo(){
+  return <img src="assets/logo-mark.png" alt="JumpStart"/>;
+}
+
+/* ============ SEARCHABLE CITY SELECT ============ */
+function CitySelect({options,value,onChange,className,placeholder}){
+  const [open,setOpen] = useState(false);
+  const [query,setQuery] = useState('');
+  const wrapRef = useRef(null);
+
+  useEffect(()=>{
+    function onDocDown(e){
+      if(wrapRef.current && !wrapRef.current.contains(e.target)){ setOpen(false); setQuery(''); }
+    }
+    document.addEventListener('mousedown', onDocDown);
+    return ()=>document.removeEventListener('mousedown', onDocDown);
+  },[]);
+
+  const filtered = useMemo(()=>{
+    const q = query.trim().toLowerCase();
+    if(!q) return options;
+    return options.filter(o=>o.toLowerCase().includes(q));
+  },[options,query]);
+
+  const select = (opt) => { onChange(opt); setOpen(false); setQuery(''); };
+
+  const handleKeyDown = (e) => {
+    if(e.key==='Enter'){ e.preventDefault(); if(filtered[0]) select(filtered[0]); }
+    else if(e.key==='Escape'){ setOpen(false); setQuery(''); }
+  };
+
   return (
-    <svg viewBox="-3 3 254 234" xmlns="http://www.w3.org/2000/svg">
-      <path d="M 162 96 L 162 148 C 162 190 130 214 90 209 C 60 205 38 191 27 167"
-            fill="none" stroke="#1B69EE" strokeWidth="46" strokeLinecap="round"/>
-      <g transform="translate(166,120) rotate(36) scale(1.08)">
-        <path d="M 8 48 L 24 64 L 9 63 L 20 86 L 3 79 L 9 106 L -24 116 L -14 86 L -27 92 L -13 66 L -22 60 L -8 52 Z" fill="#12C983"/>
-        <g stroke="#12C983" strokeWidth="5.5" strokeLinecap="round" opacity="0.4">
-          <line x1="30" y1="70" x2="6" y2="102"/>
-          <line x1="40" y1="80" x2="18" y2="110"/>
-        </g>
-        <polygon points="-18,32 -42,54 -12,48" fill="#1B69EE"/>
-        <polygon points="18,32 42,54 12,48" fill="#1B69EE"/>
-        <rect x="-19" y="-66" width="38" height="104" rx="19" fill="#1B69EE"/>
-        <path d="M -19 -62 C -19 -98 0 -128 0 -128 C 0 -128 19 -98 19 -62 Z" fill="#1B69EE"/>
-        <circle cx="0" cy="-30" r="11" fill="#E7F0FC"/>
-        <circle cx="0" cy="-30" r="11" fill="none" stroke="#1B69EE" strokeWidth="3"/>
-      </g>
-    </svg>
+    <div className="city-select" ref={wrapRef}>
+      <input
+        className={className}
+        placeholder={placeholder||'Търсете град...'}
+        value={open ? query : value}
+        onFocus={()=>setQuery('')}
+        onClick={()=>setOpen(true)}
+        onChange={e=>{setOpen(true);setQuery(e.target.value);}}
+        onKeyDown={handleKeyDown}
+      />
+      {open && (
+        <div className="city-select-dropdown">
+          {filtered.length===0 ? (
+            <div className="city-select-empty">Няма намерени градове</div>
+          ) : filtered.map(opt=>(
+            <div
+              key={opt}
+              className={"city-select-option"+(opt===value?' active':'')}
+              onClick={()=>select(opt)}
+            >{opt}</div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
 /* ============ HEADER ============ */
-function Header({user,onOpenAuth,onLogout,onGoHome,onGoPost,onGoJobs,onGoSaved,onGoDashboard}){
+function ThemeToggle({theme,onToggle}){
+  const isDark = theme==='dark';
+  return (
+    <button
+      className="theme-toggle"
+      onClick={onToggle}
+      aria-label={isDark?'Превключи към светла тема':'Превключи към тъмна тема'}
+      title={isDark?'Светла тема':'Тъмна тема'}
+    >
+      <span className="theme-toggle-icon" key={theme}>
+        <Icon name={isDark?'moon':'sun'} size={17}/>
+      </span>
+    </button>
+  );
+}
+
+function Header({user,theme,onToggleTheme,onOpenAuth,onLogout,onGoHome,onGoPost,onGoJobs,onGoSaved,onGoDashboard,onGoCv}){
   return (
     <header className="site-header">
       <div className="container header-top">
         <a href="#" onClick={(e)=>{e.preventDefault();onGoHome();}} className="logo">
           <div className="logo-mark"><RocketJLogo/></div>
-          Jump<span className="logo-sub">Start</span>
+          JumpStart
         </a>
         <nav className="main-nav">
           <a href="#" onClick={(e)=>{e.preventDefault();onGoJobs();}} className="nav-link">Обяви за работа</a>
           <a href="#" onClick={(e)=>{e.preventDefault();onGoPost();}} className="nav-link">За работодатели</a>
           {user && <a href="#" onClick={(e)=>{e.preventDefault();onGoSaved();}} className="nav-link">Запазени</a>}
+          {user && user.role==='candidate' && <a href="#" onClick={(e)=>{e.preventDefault();onGoCv();}} className="nav-link">Моето CV</a>}
           {user && user.role==='employer' && <a href="#" onClick={(e)=>{e.preventDefault();onGoDashboard();}} className="nav-link">Моите обяви</a>}
         </nav>
         <div className="header-actions">
+          <ThemeToggle theme={theme} onToggle={onToggleTheme}/>
           {!user ? (
             <>
               <button className="btn btn-ghost-light btn-sm" onClick={()=>onOpenAuth('login')}>Вход</button>
@@ -635,7 +882,7 @@ function Header({user,onOpenAuth,onLogout,onGoHome,onGoPost,onGoJobs,onGoSaved,o
             </>
           ) : (
             <>
-              <button className="btn btn-coral btn-sm" onClick={onGoPost}><Icon name="plus" size={15}/>Публикувай</button>
+              {user.role==='employer' && <button className="btn btn-coral btn-sm" onClick={onGoPost}><Icon name="plus" size={15}/>Публикувай</button>}
               <div className="user-chip">
                 <div className="user-avatar">{user.name.slice(0,2).toUpperCase()}</div>
                 {user.name.split(' ')[0]}
@@ -668,9 +915,7 @@ function Hero({onSearch}){
           <div className="search-divider"></div>
           <div className="search-field">
             <Icon name="pin" size={18}/>
-            <select value={city} onChange={e=>setCity(e.target.value)}>
-              {CITIES.map(c=><option key={c}>{c}</option>)}
-            </select>
+            <CitySelect options={CITIES} value={city} onChange={setCity} placeholder="Всички градове"/>
           </div>
           <button className="btn btn-coral btn-lg" onClick={()=>onSearch(kw,city)}>Търси</button>
         </div>
@@ -801,9 +1046,7 @@ function JobsPage({jobs,savedIds,onToggleSave,onOpen,initialKw,initialCity,loadi
 
           <div className="filter-group">
             <label>Град</label>
-            <select className="filter-select" value={city} onChange={e=>setCity(e.target.value)}>
-              {CITIES.map(c=><option key={c}>{c}</option>)}
-            </select>
+            <CitySelect options={CITIES} value={city} onChange={setCity} className="filter-select" placeholder="Всички градове"/>
           </div>
 
           <div className="filter-group">
@@ -880,7 +1123,7 @@ function JobDetailModal({job,onClose,user,onOpenAuth,onApplied,applied}){
           <div style={{display:'flex',gap:24,padding:'4px 0 6px'}}>
             <div>
               <div style={{fontSize:11,color:'var(--ink-mute)',fontWeight:700,textTransform:'uppercase'}}>Заплащане</div>
-              <div style={{fontSize:16,fontWeight:800,color:'var(--navy)'}}>{job.salaryMin.toLocaleString('bg-BG')} – {job.salaryMax.toLocaleString('bg-BG')} лв.</div>
+              <div style={{fontSize:16,fontWeight:800,color:'var(--accent)'}}>{job.salaryMin.toLocaleString('bg-BG')} – {job.salaryMax.toLocaleString('bg-BG')} лв.</div>
             </div>
             <div>
               <div style={{fontSize:11,color:'var(--ink-mute)',fontWeight:700,textTransform:'uppercase'}}>Опит</div>
@@ -988,7 +1231,7 @@ function AuthModal({mode,onClose,onSwitch,onAuthSuccess}){
         </div>
         <div className="modal-body">
           {errors.general && (
-            <div className="form-err-msg" style={{background:'var(--coral-light)',color:'var(--coral-dark)',padding:'10px 12px',borderRadius:8,marginBottom:16,fontSize:13.5}}>
+            <div className="form-err-msg" style={{background:'var(--coral-light)',color:'var(--coral-text)',padding:'10px 12px',borderRadius:8,marginBottom:16,fontSize:13.5}}>
               {errors.general}
             </div>
           )}
@@ -1088,6 +1331,18 @@ function PostJobPage({user,onOpenAuth,onPublish}){
     );
   }
 
+  if(user && user.role!=='employer'){
+    return (
+      <div className="container section" style={{paddingTop:32}}>
+        <div className="empty-state" style={{maxWidth:520,margin:'0 auto'}}>
+          <Icon name="building" size={38} style={{margin:'0 auto'}}/>
+          <h4>Само работодателски профили могат да публикуват обяви</h4>
+          <p>Вашият профил е регистриран като кандидат. За да публикувате обяви, регистрирайте отделен профил като работодател.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container section" style={{paddingTop:32}}>
       <div className="breadcrumb">
@@ -1104,12 +1359,12 @@ function PostJobPage({user,onOpenAuth,onPublish}){
         <div className="post-form-card">
           {!user && (
             <div style={{background:'var(--coral-light)',border:'1px solid var(--coral)',borderRadius:10,padding:'12px 16px',marginBottom:22,display:'flex',justifyContent:'space-between',alignItems:'center',gap:12,flexWrap:'wrap'}}>
-              <span style={{fontSize:13.5,color:'var(--coral-dark)',fontWeight:600}}>Трябва да имате профил, за да публикувате обява.</span>
+              <span style={{fontSize:13.5,color:'var(--coral-text)',fontWeight:600}}>Трябва да имате профил, за да публикувате обява.</span>
               <button className="btn btn-coral btn-sm" onClick={()=>onOpenAuth('register')}>Регистрирай се</button>
             </div>
           )}
           {error && (
-            <div style={{background:'var(--coral-light)',border:'1px solid var(--coral)',borderRadius:10,padding:'12px 16px',marginBottom:22,color:'var(--coral-dark)',fontSize:13.5,fontWeight:600}}>
+            <div style={{background:'var(--coral-light)',border:'1px solid var(--coral)',borderRadius:10,padding:'12px 16px',marginBottom:22,color:'var(--coral-text)',fontSize:13.5,fontWeight:600}}>
               {error}
             </div>
           )}
@@ -1129,9 +1384,7 @@ function PostJobPage({user,onOpenAuth,onPublish}){
               </div>
               <div className="form-group">
                 <label>Град</label>
-                <select className="form-input" value={form.city} onChange={e=>set('city',e.target.value)}>
-                  {CITIES.slice(1).map(c=><option key={c}>{c}</option>)}
-                </select>
+                <CitySelect options={CITIES.slice(1)} value={form.city} onChange={v=>set('city',v)} className="form-input" placeholder="Изберете град"/>
               </div>
             </div>
 
@@ -1240,36 +1493,316 @@ function DashboardPage({token,onOpen,refreshKey}){
   );
 }
 
+/* ============ CV BUILDER ============ */
+function emptyCv(user){
+  return {
+    fullName: user ? user.name : '',
+    email: user ? user.email : '',
+    phone: '',
+    city: 'София',
+    summary: '',
+    skills: [],
+    experience: [],
+    education: [],
+    languages: [],
+  };
+}
+
+function CvForm({initial,onCancel,onSave,saving,error}){
+  const [form,setForm] = useState(initial);
+  const [skillInput,setSkillInput] = useState('');
+  const [langInput,setLangInput] = useState('');
+
+  const set = (k,v) => setForm(f=>({...f,[k]:v}));
+
+  const addChip = (key,input,setInput) => {
+    const v = input.trim();
+    if(!v || form[key].includes(v)){ setInput(''); return; }
+    set(key, [...form[key], v]);
+    setInput('');
+  };
+  const removeChip = (key,v) => set(key, form[key].filter(x=>x!==v));
+
+  const addExperience = () => set('experience', [...form.experience, {title:'',company:'',period:'',description:''}]);
+  const updateExperience = (i,k,v) => set('experience', form.experience.map((e,idx)=>idx===i?{...e,[k]:v}:e));
+  const removeExperience = (i) => set('experience', form.experience.filter((_,idx)=>idx!==i));
+
+  const addEducation = () => set('education', [...form.education, {school:'',degree:'',period:''}]);
+  const updateEducation = (i,k,v) => set('education', form.education.map((e,idx)=>idx===i?{...e,[k]:v}:e));
+  const removeEducation = (i) => set('education', form.education.filter((_,idx)=>idx!==i));
+
+  const handleSubmit = (e) => { e.preventDefault(); onSave(form); };
+
+  return (
+    <form onSubmit={handleSubmit} className="post-form-card cv-page-layout">
+      {error && (
+        <div style={{background:'var(--coral-light)',border:'1px solid var(--coral)',borderRadius:10,padding:'12px 16px',marginBottom:22,color:'var(--coral-text)',fontSize:13.5,fontWeight:600}}>
+          {error}
+        </div>
+      )}
+
+      <h3>Лична информация</h3>
+      <div className="form-row">
+        <div className="form-group"><label>Пълно име</label><input className="form-input" value={form.fullName} onChange={e=>set('fullName',e.target.value)} required/></div>
+        <div className="form-group"><label>Имейл</label><input type="email" className="form-input" value={form.email} onChange={e=>set('email',e.target.value)}/></div>
+      </div>
+      <div className="form-row">
+        <div className="form-group"><label>Телефон</label><input className="form-input" value={form.phone} onChange={e=>set('phone',e.target.value)}/></div>
+        <div className="form-group">
+          <label>Град</label>
+          <CitySelect options={CITIES.slice(1)} value={form.city} onChange={v=>set('city',v)} className="form-input" placeholder="Изберете град"/>
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label>Кратко представяне</label>
+        <textarea className="form-input" rows="4" placeholder="Разкажете накратко за себе си и професионалния си опит..." value={form.summary} onChange={e=>set('summary',e.target.value)} style={{resize:'vertical',fontFamily:'inherit'}}></textarea>
+      </div>
+
+      <div className="form-group">
+        <label>Умения</label>
+        <div className="chip-input-row">
+          <input className="form-input" placeholder="напр. JavaScript" value={skillInput} onChange={e=>setSkillInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();addChip('skills',skillInput,setSkillInput);}}}/>
+          <button type="button" className="btn btn-outline btn-sm" onClick={()=>addChip('skills',skillInput,setSkillInput)}>Добави</button>
+        </div>
+        {form.skills.length>0 && (
+          <div className="chip-row" style={{marginTop:10}}>
+            {form.skills.map(s=>(
+              <span key={s} className="cv-chip">{s}<button type="button" onClick={()=>removeChip('skills',s)} aria-label="Премахни"><Icon name="x" size={12}/></button></span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <h3 style={{marginTop:28}}>Професионален опит</h3>
+      {form.experience.map((exp,i)=>(
+        <div key={i} className="cv-entry">
+          <div className="form-row">
+            <div className="form-group"><label>Длъжност</label><input className="form-input" value={exp.title} onChange={e=>updateExperience(i,'title',e.target.value)}/></div>
+            <div className="form-group"><label>Компания</label><input className="form-input" value={exp.company} onChange={e=>updateExperience(i,'company',e.target.value)}/></div>
+          </div>
+          <div className="form-group"><label>Период</label><input className="form-input" placeholder="напр. 2021 - 2024" value={exp.period} onChange={e=>updateExperience(i,'period',e.target.value)}/></div>
+          <div className="form-group"><label>Описание</label><textarea className="form-input" rows="3" value={exp.description} onChange={e=>updateExperience(i,'description',e.target.value)} style={{resize:'vertical',fontFamily:'inherit'}}></textarea></div>
+          <button type="button" className="btn btn-outline btn-sm" onClick={()=>removeExperience(i)}>Премахни</button>
+        </div>
+      ))}
+      <button type="button" className="btn btn-outline btn-sm" onClick={addExperience}><Icon name="plus" size={14}/>Добави опит</button>
+
+      <h3 style={{marginTop:28}}>Образование</h3>
+      {form.education.map((ed,i)=>(
+        <div key={i} className="cv-entry">
+          <div className="form-row">
+            <div className="form-group"><label>Учебно заведение</label><input className="form-input" value={ed.school} onChange={e=>updateEducation(i,'school',e.target.value)}/></div>
+            <div className="form-group"><label>Степен/специалност</label><input className="form-input" value={ed.degree} onChange={e=>updateEducation(i,'degree',e.target.value)}/></div>
+          </div>
+          <div className="form-group"><label>Период</label><input className="form-input" placeholder="напр. 2017 - 2021" value={ed.period} onChange={e=>updateEducation(i,'period',e.target.value)}/></div>
+          <button type="button" className="btn btn-outline btn-sm" onClick={()=>removeEducation(i)}>Премахни</button>
+        </div>
+      ))}
+      <button type="button" className="btn btn-outline btn-sm" onClick={addEducation}><Icon name="plus" size={14}/>Добави образование</button>
+
+      <div className="form-group" style={{marginTop:28}}>
+        <label>Езици</label>
+        <div className="chip-input-row">
+          <input className="form-input" placeholder="напр. Английски" value={langInput} onChange={e=>setLangInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'){e.preventDefault();addChip('languages',langInput,setLangInput);}}}/>
+          <button type="button" className="btn btn-outline btn-sm" onClick={()=>addChip('languages',langInput,setLangInput)}>Добави</button>
+        </div>
+        {form.languages.length>0 && (
+          <div className="chip-row" style={{marginTop:10}}>
+            {form.languages.map(l=>(
+              <span key={l} className="cv-chip">{l}<button type="button" onClick={()=>removeChip('languages',l)} aria-label="Премахни"><Icon name="x" size={12}/></button></span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div style={{display:'flex',gap:10,marginTop:28}}>
+        <button type="submit" className="btn btn-coral btn-lg" disabled={saving}>{saving?'Запазване...':'Запази автобиографията'}</button>
+        {onCancel && <button type="button" className="btn btn-outline btn-lg" onClick={onCancel}>Отказ</button>}
+      </div>
+    </form>
+  );
+}
+
+function CvView({cv,onEdit}){
+  return (
+    <div className="post-form-card cv-page-layout">
+      <div className="cv-view-header">
+        <div>
+          <h3 style={{fontSize:22,marginBottom:4}}>{cv.fullName}</h3>
+          <div style={{fontSize:13.5,color:'var(--ink-mute)'}}>{[cv.email,cv.phone,cv.city].filter(Boolean).join(' · ')}</div>
+        </div>
+        <button className="btn btn-navy" onClick={onEdit}><Icon name="fileText" size={15}/>Редактирай</button>
+      </div>
+
+      {cv.summary && (<><h4>За мен</h4><p>{cv.summary}</p></>)}
+
+      {cv.skills.length>0 && (<>
+        <h4>Умения</h4>
+        <div className="chip-row">{cv.skills.map(s=><span key={s} className="cv-chip cv-chip-static">{s}</span>)}</div>
+      </>)}
+
+      {cv.experience.length>0 && (<>
+        <h4>Професионален опит</h4>
+        {cv.experience.map((e,i)=>(
+          <div key={i} className="cv-entry">
+            <div className="cv-entry-title">{e.title}{e.company && <span style={{fontWeight:500,color:'var(--ink-soft)'}}> · {e.company}</span>}</div>
+            {e.period && <div className="cv-entry-sub">{e.period}</div>}
+            {e.description && <p>{e.description}</p>}
+          </div>
+        ))}
+      </>)}
+
+      {cv.education.length>0 && (<>
+        <h4>Образование</h4>
+        {cv.education.map((e,i)=>(
+          <div key={i} className="cv-entry">
+            <div className="cv-entry-title">{e.school}</div>
+            <div className="cv-entry-sub" style={{marginBottom:0}}>{[e.degree,e.period].filter(Boolean).join(' · ')}</div>
+          </div>
+        ))}
+      </>)}
+
+      {cv.languages.length>0 && (<>
+        <h4>Езици</h4>
+        <div className="chip-row">{cv.languages.map(l=><span key={l} className="cv-chip cv-chip-static">{l}</span>)}</div>
+      </>)}
+    </div>
+  );
+}
+
+function CvPage({user,token,onOpenAuth}){
+  const [cv,setCv] = useState(null);
+  const [loading,setLoading] = useState(true);
+  const [mode,setMode] = useState('view');
+  const [saving,setSaving] = useState(false);
+  const [error,setError] = useState('');
+
+  useEffect(()=>{
+    if(!user || !token){ setLoading(false); return; }
+    let cancelled = false;
+    setLoading(true);
+    api.getCv(token).then(data=>{
+      if(cancelled) return;
+      setCv(data);
+      setMode(data ? 'view' : 'edit');
+      setLoading(false);
+    }).catch(err=>{
+      if(cancelled) return;
+      setError(err.message);
+      setLoading(false);
+    });
+    return ()=>{ cancelled = true; };
+  },[user,token]);
+
+  const handleSave = async (form) => {
+    setSaving(true);
+    setError('');
+    try {
+      const saved = await api.saveCv(token, form);
+      setCv(saved);
+      setMode('view');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if(!user){
+    return (
+      <div className="container section" style={{paddingTop:32}}>
+        <div className="empty-state" style={{maxWidth:520,margin:'0 auto'}}>
+          <Icon name="fileText" size={38} style={{margin:'0 auto'}}/>
+          <h4>Влезте в профила си, за да създадете CV</h4>
+          <p>Създайте автобиография веднъж и я използвайте за всяка кандидатура.</p>
+          <button className="btn btn-coral" onClick={()=>onOpenAuth('register')}>Регистрирай се</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container section" style={{paddingTop:32}}>
+      <div className="breadcrumb"><span>Начало</span><Icon name="chevronRight" size={12}/><span style={{color:'var(--ink)'}}>Моето CV</span></div>
+      <div className="page-title-row">
+        <div>
+          <h1>Моето CV</h1>
+          <div className="result-count">{cv ? 'Последно обновено: ' + new Date(cv.updatedAt).toLocaleDateString('bg-BG') : 'Все още не сте създали CV'}</div>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="empty-state"><p>Зареждане...</p></div>
+      ) : mode==='edit' ? (
+        <CvForm initial={cv || emptyCv(user)} onCancel={cv ? ()=>setMode('view') : null} onSave={handleSave} saving={saving} error={error}/>
+      ) : (
+        <CvView cv={cv} onEdit={()=>setMode('edit')}/>
+      )}
+    </div>
+  );
+}
+
 /* ============ FOOTER ============ */
-function Footer(){
+/* ============ STATIC PAGE ============ */
+function StaticPage({data}){
+  if(!data) return null;
+  return (
+    <div className="container section" style={{paddingTop:32}}>
+      <div className="breadcrumb"><span>Начало</span><Icon name="chevronRight" size={12}/><span style={{color:'var(--ink)'}}>{data.title}</span></div>
+      <div className="page-title-row">
+        <div>
+          <h1>{data.title}</h1>
+          <div className="result-count">{data.subtitle}</div>
+        </div>
+      </div>
+      <div className="post-form-card cv-page-layout detail-body">
+        {data.blocks.map((b,i)=>{
+          if(b.h) return <h4 key={i}>{b.h}</h4>;
+          if(b.p) return <p key={i}>{b.p}</p>;
+          if(b.table) return (
+            <div key={i} className="info-table">
+              {b.table.map(([k,v])=>(
+                <div key={k} className="info-table-row"><span className="info-table-key">{k}</span><span className="info-table-value">{v}</span></div>
+              ))}
+            </div>
+          );
+          return null;
+        })}
+      </div>
+    </div>
+  );
+}
+
+function Footer({onGoCv,onGoPost,onGoJobs,onGoStatic}){
   return (
     <footer>
       <div className="container">
         <div className="footer-grid">
           <div>
-            <div className="footer-logo"><div className="logo-mark"><RocketJLogo/></div>Jump<span className="logo-sub">Start</span></div>
+            <div className="footer-logo"><div className="logo-mark"><RocketJLogo/></div>JumpStart</div>
             <p style={{fontSize:13.5,lineHeight:1.7,maxWidth:280}}>Водещата платформа за обяви за работа в България. Свързваме таланти с компании от 2024 година.</p>
           </div>
           <div className="footer-col">
             <h5>За кандидати</h5>
-            <a href="#">Търсене на обяви</a>
-            <a href="#">Създай CV</a>
-            <a href="#">Кариерни съвети</a>
-            <a href="#">Заплати по професии</a>
+            <a href="#" onClick={(e)=>{e.preventDefault();onGoJobs();}}>Търсене на обяви</a>
+            <a href="#" onClick={(e)=>{e.preventDefault();onGoCv();}}>Създай CV</a>
+            <a href="#" onClick={(e)=>{e.preventDefault();onGoStatic('career-tips');}}>Кариерни съвети</a>
+            <a href="#" onClick={(e)=>{e.preventDefault();onGoStatic('salaries');}}>Заплати по професии</a>
           </div>
           <div className="footer-col">
             <h5>За работодатели</h5>
-            <a href="#">Публикувай обява</a>
-            <a href="#">Ценови пакети</a>
-            <a href="#">База данни с CV-та</a>
-            <a href="#">Employer branding</a>
+            <a href="#" onClick={(e)=>{e.preventDefault();onGoPost();}}>Публикувай обява</a>
+            <a href="#" onClick={(e)=>{e.preventDefault();onGoStatic('pricing');}}>Ценови пакети</a>
+            <a href="#" onClick={(e)=>{e.preventDefault();onGoStatic('cv-database');}}>База данни с CV-та</a>
+            <a href="#" onClick={(e)=>{e.preventDefault();onGoStatic('employer-branding');}}>Employer branding</a>
           </div>
           <div className="footer-col">
             <h5>Компания</h5>
-            <a href="#">За нас</a>
-            <a href="#">Контакти</a>
-            <a href="#">Условия за ползване</a>
-            <a href="#">Поверителност</a>
+            <a href="#" onClick={(e)=>{e.preventDefault();onGoStatic('about');}}>За нас</a>
+            <a href="#" onClick={(e)=>{e.preventDefault();onGoStatic('contact');}}>Контакти</a>
+            <a href="#" onClick={(e)=>{e.preventDefault();onGoStatic('terms');}}>Условия за ползване</a>
+            <a href="#" onClick={(e)=>{e.preventDefault();onGoStatic('privacy');}}>Поверителност</a>
           </div>
         </div>
         <div className="footer-bottom">
@@ -1297,6 +1830,18 @@ function App(){
   const [searchKw,setSearchKw] = useState('');
   const [searchCity,setSearchCity] = useState('Всички градове');
   const [dashboardRefreshKey,setDashboardRefreshKey] = useState(0);
+  const [theme,setTheme] = useState(()=>{
+    const saved = safeStorage.get('jumpstart_theme');
+    if(saved==='dark' || saved==='light') return saved;
+    return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+  });
+
+  useEffect(()=>{
+    document.documentElement.setAttribute('data-theme', theme);
+    safeStorage.set('jumpstart_theme', theme);
+  },[theme]);
+
+  const toggleTheme = () => setTheme(t=>t==='dark'?'light':'dark');
 
   const savedIds = useMemo(()=>savedJobs.map(j=>j.id),[savedJobs]);
 
@@ -1413,6 +1958,8 @@ function App(){
     <div>
       <Header
         user={user}
+        theme={theme}
+        onToggleTheme={toggleTheme}
         onOpenAuth={setAuthMode}
         onLogout={handleLogout}
         onGoHome={()=>setPage('home')}
@@ -1420,6 +1967,7 @@ function App(){
         onGoJobs={()=>{setSearchKw('');setSearchCity('Всички градове');setPage('jobs');}}
         onGoSaved={()=>setPage('saved')}
         onGoDashboard={()=>setPage('dashboard')}
+        onGoCv={()=>setPage('cv')}
       />
 
       {page==='home' && (
@@ -1443,7 +1991,7 @@ function App(){
               {jobsLoading ? (
                 <p style={{color:'var(--ink-mute)'}}>Зареждане на обяви...</p>
               ) : jobsError ? (
-                <p style={{color:'var(--coral-dark)'}}>{jobsError}</p>
+                <p style={{color:'var(--coral-text)'}}>{jobsError}</p>
               ) : (
                 <div className="job-list">
                   {jobs.slice(0,6).map(j=>(
@@ -1483,7 +2031,20 @@ function App(){
         <DashboardPage token={token} onOpen={setSelectedJob} refreshKey={dashboardRefreshKey}/>
       )}
 
-      <Footer/>
+      {page==='cv' && (
+        <CvPage user={user} token={token} onOpenAuth={setAuthMode}/>
+      )}
+
+      {STATIC_PAGES[page] && (
+        <StaticPage data={STATIC_PAGES[page]}/>
+      )}
+
+      <Footer
+        onGoCv={()=>setPage('cv')}
+        onGoPost={()=>setPage('post')}
+        onGoJobs={()=>{setSearchKw('');setSearchCity('Всички градове');setPage('jobs');}}
+        onGoStatic={(key)=>{setPage(key);window.scrollTo({top:0,behavior:'smooth'});}}
+      />
 
       {selectedJob && (
         <JobDetailModal
