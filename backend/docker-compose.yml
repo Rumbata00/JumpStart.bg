@@ -29,6 +29,7 @@ services:
       NODE_ENV: production
       CORS_ORIGIN: "*"
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in backend/.env — see .env.example}
+      DATABASE_URL: ${DATABASE_URL:-}
       PGHOST: db
       PGPORT: 5432
       PGUSER: postgres

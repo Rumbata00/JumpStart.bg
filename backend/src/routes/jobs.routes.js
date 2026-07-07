@@ -87,6 +87,53 @@ router.get('/mine', requireAuth, requireRole('employer'), async (req, res) => {
   }
 });
 
+// GET /api/jobs/:id/applicants — candidates who applied, for the job's owner only.
+// The CV (if the candidate has created one) is included so the employer can
+// judge fit without a separate request per applicant.
+router.get('/:id/applicants', requireAuth, requireRole('employer'), async (req, res) => {
+  if (!/^\d+$/.test(req.params.id)) return res.status(400).json({ error: 'Невалиден идентификатор.' });
+  try {
+    const jobResult = await db.query('SELECT owner_id FROM jobs WHERE id = $1', [req.params.id]);
+    if (jobResult.rows.length === 0) return res.status(404).json({ error: 'Обявата не е намерена.' });
+    if (jobResult.rows[0].owner_id !== req.user.id) {
+      return res.status(403).json({ error: 'Нямате права да видите кандидатите за тази обява.' });
+    }
+
+    const result = await db.query(
+      `SELECT u.id, u.name, u.email, a.applied_at,
+              c.full_name, c.phone, c.city, c.summary, c.skills, c.experience, c.education, c.languages
+       FROM applications a
+       JOIN users u ON u.id = a.user_id
+       LEFT JOIN cvs c ON c.user_id = u.id
+       WHERE a.job_id = $1
+       ORDER BY a.applied_at DESC`,
+      [req.params.id]
+    );
+
+    const applicants = result.rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      appliedAt: row.applied_at,
+      cv: row.full_name === null ? null : {
+        fullName: row.full_name,
+        phone: row.phone,
+        city: row.city,
+        summary: row.summary,
+        skills: row.skills,
+        experience: row.experience,
+        education: row.education,
+        languages: row.languages,
+      },
+    }));
+
+    res.json({ applicants });
+  } catch (err) {
+    console.error('GET /jobs/:id/applicants failed:', err);
+    res.status(500).json({ error: 'Възникна грешка при зареждане на кандидатите.' });
+  }
+});
+
 router.get('/:id', async (req, res) => {
   if (!/^\d+$/.test(req.params.id)) return res.status(400).json({ error: 'Невалиден идентификатор.' });
   try {

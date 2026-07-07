@@ -496,6 +496,20 @@
   }
   .detail-actions{display:flex;gap:10px;margin-top:26px;padding-top:22px;border-top:1px solid var(--line);}
 
+  /* ===== APPLICANTS / MATCHING ===== */
+  .applicant-card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:20px 22px;}
+  .applicant-card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+  .applicant-name{font-size:16px;font-weight:700;}
+  .applicant-meta{font-size:13px;color:var(--ink-soft);margin-top:3px;}
+  .match-badge{padding:5px 12px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap;}
+  .match-badge.tier-high{background:var(--green-bg);color:var(--green);}
+  .match-badge.tier-medium{background:var(--coral-light);color:var(--coral-text);}
+  .match-badge.tier-low{background:var(--cream);color:var(--ink-mute);}
+  .applicant-reasons{margin:10px 0 0;padding-left:18px;}
+  .applicant-reasons li{font-size:12.5px;color:var(--ink-mute);line-height:1.7;}
+  .applicant-summary{font-size:13.5px;color:var(--ink-soft);margin-top:10px;line-height:1.6;}
+  .applicant-applied-at{font-size:11.5px;color:var(--ink-mute);margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
+
   /* ===== POST JOB PAGE ===== */
   .post-layout{display:grid;grid-template-columns:1fr 320px;gap:28px;align-items:start;}
   .post-form-card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:32px;}
@@ -793,6 +807,7 @@ const api = {
   },
   createJob: (token, form) => apiFetch('/jobs', { method: 'POST', token, body: form }).then(d => d.job),
   myJobs: (token) => apiFetch('/jobs/mine', { token }).then(d => d.jobs),
+  jobApplicants: (token, jobId) => apiFetch(`/jobs/${jobId}/applicants`, { token }).then(d => d.applicants),
   applyToJob: (token, jobId) => apiFetch(`/jobs/${jobId}/apply`, { method: 'POST', token }),
   myApplications: (token) => apiFetch('/applications', { token }).then(d => d.jobIds),
   saveJob: (token, jobId) => apiFetch(`/saved/${jobId}`, { method: 'POST', token }),
@@ -1518,6 +1533,7 @@ function DashboardPage({token,onOpen,refreshKey}){
   const [myJobs,setMyJobs] = useState([]);
   const [loading,setLoading] = useState(true);
   const [error,setError] = useState('');
+  const [viewingJob,setViewingJob] = useState(null);
 
   useEffect(()=>{
     let cancelled = false;
@@ -1529,6 +1545,10 @@ function DashboardPage({token,onOpen,refreshKey}){
     });
     return ()=>{ cancelled = true; };
   },[token,refreshKey]);
+
+  if(viewingJob){
+    return <ApplicantsPage job={viewingJob} token={token} onBack={()=>setViewingJob(null)}/>;
+  }
 
   return (
     <div className="container section" style={{paddingTop:32}}>
@@ -1545,7 +1565,156 @@ function DashboardPage({token,onOpen,refreshKey}){
           <p>Публикувайте първата си обява, за да достигнете до кандидати.</p>
         </div>
       ) : (
-        <div className="job-list">{myJobs.map(j=><JobCard key={j.id} job={j} saved={false} onToggleSave={()=>{}} onOpen={onOpen}/>)}</div>
+        <div className="job-list">
+          {myJobs.map(j=>(
+            <div key={j.id}>
+              <JobCard job={j} saved={false} onToggleSave={()=>{}} onOpen={onOpen}/>
+              <div style={{display:'flex',justifyContent:'flex-end',margin:'-4px 0 8px'}}>
+                <button className="btn btn-outline btn-sm" onClick={()=>setViewingJob(j)}>
+                  <Icon name="users" size={14}/>Виж кандидатите
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ============ APPLICANTS / CANDIDATE MATCHING ============ */
+function scoreApplicant(applicant, job){
+  const cv = applicant.cv;
+  if(!cv){
+    return {score:0, tier:'low', reasons:['Кандидатът няма създадено CV в профила си']};
+  }
+
+  let score = 0;
+  const reasons = [];
+
+  const jobText = [job.title, job.description, ...(job.requirements||[])].join(' ').toLowerCase();
+  const skills = cv.skills || [];
+  const matchedSkills = skills.filter(s=>jobText.includes(String(s).toLowerCase()));
+  if(matchedSkills.length>0){
+    score += Math.min(matchedSkills.length*15, 55);
+    reasons.push('Съвпадащи умения: '+matchedSkills.join(', '));
+  }
+
+  if(job.isRemote){
+    score += 15;
+    reasons.push('Обявата е дистанционна работа');
+  } else if(cv.city && job.city && cv.city===job.city){
+    score += 15;
+    reasons.push('Кандидатът е от '+cv.city);
+  }
+
+  const expCount = (cv.experience||[]).length;
+  const neededLevel = {'Без опит':0,'1-3 години':1,'3-5 години':2,'Над 5 години':3}[job.experience] ?? 0;
+  if(expCount>0 && expCount>=neededLevel){
+    score += 20;
+    reasons.push(expCount+' позиции професионален опит в CV-то');
+  } else if(expCount>0){
+    score += 10;
+    reasons.push('Има опит, но по-малко от обичайния за тази позиция');
+  }
+
+  if(cv.summary) score += 5;
+
+  score = Math.max(0, Math.min(100, score));
+  const tier = score>=65 ? 'high' : score>=35 ? 'medium' : 'low';
+  return {score, tier, reasons};
+}
+
+const TIER_LABEL = {high:'Силно подходящ', medium:'Частично подходящ', low:'Слабо подходящ'};
+
+function ApplicantsPage({job,token,onBack}){
+  const [applicants,setApplicants] = useState([]);
+  const [loading,setLoading] = useState(true);
+  const [error,setError] = useState('');
+  const [filter,setFilter] = useState('all');
+  const [sortBy,setSortBy] = useState('score');
+
+  useEffect(()=>{
+    let cancelled = false;
+    setLoading(true);
+    api.jobApplicants(token, job.id).then(list=>{
+      if(!cancelled){ setApplicants(list); setLoading(false); }
+    }).catch(err=>{
+      if(!cancelled){ setError(err.message); setLoading(false); }
+    });
+    return ()=>{ cancelled = true; };
+  },[job.id,token]);
+
+  const scored = useMemo(()=>applicants.map(a=>({...a, match:scoreApplicant(a,job)})),[applicants,job]);
+
+  const filtered = useMemo(()=>{
+    const list = filter==='all' ? scored : scored.filter(a=>a.match.tier===filter);
+    return [...list].sort((a,b)=> sortBy==='score' ? b.match.score-a.match.score : new Date(b.appliedAt)-new Date(a.appliedAt));
+  },[scored,filter,sortBy]);
+
+  return (
+    <div className="container section" style={{paddingTop:32}}>
+      <div className="breadcrumb">
+        <a href="#" onClick={(e)=>{e.preventDefault();onBack();}}>Моите обяви</a>
+        <Icon name="chevronRight" size={12}/><span style={{color:'var(--ink)'}}>Кандидати</span>
+      </div>
+      <div className="page-title-row">
+        <div>
+          <h1>Кандидати за "{job.title}"</h1>
+          <div className="result-count">{applicants.length} кандидатури</div>
+        </div>
+      </div>
+
+      <div style={{display:'flex',gap:10,marginBottom:20,flexWrap:'wrap'}}>
+        <select className="filter-select" style={{width:'auto'}} value={filter} onChange={e=>setFilter(e.target.value)}>
+          <option value="all">Всички нива на съвпадение</option>
+          <option value="high">Само силно подходящи</option>
+          <option value="medium">Само частично подходящи</option>
+          <option value="low">Само слабо подходящи</option>
+        </select>
+        <select className="filter-select" style={{width:'auto'}} value={sortBy} onChange={e=>setSortBy(e.target.value)}>
+          <option value="score">Сортирай по съвпадение</option>
+          <option value="date">Сортирай по дата на кандидатстване</option>
+        </select>
+      </div>
+
+      {loading ? (
+        <div className="empty-state"><p>Зареждане...</p></div>
+      ) : error ? (
+        <div className="empty-state"><p>{error}</p></div>
+      ) : filtered.length===0 ? (
+        <div className="empty-state">
+          <Icon name="users" size={38} style={{margin:'0 auto'}}/>
+          <h4>{applicants.length===0 ? 'Все още няма кандидатури за тази обява' : 'Няма кандидати в тази категория'}</h4>
+        </div>
+      ) : (
+        <div className="job-list">
+          {filtered.map(a=>(
+            <div key={a.id} className="applicant-card">
+              <div className="applicant-card-header">
+                <div>
+                  <div className="applicant-name">{a.cv ? a.cv.fullName : a.name}</div>
+                  <div className="applicant-meta">
+                    {a.email}{a.cv && a.cv.phone ? ' · '+a.cv.phone : ''}{a.cv && a.cv.city ? ' · '+a.cv.city : ''}
+                  </div>
+                </div>
+                <span className={"match-badge tier-"+a.match.tier}>{TIER_LABEL[a.match.tier]} · {a.match.score}%</span>
+              </div>
+              {a.match.reasons.length>0 && (
+                <ul className="applicant-reasons">
+                  {a.match.reasons.map((r,i)=><li key={i}>{r}</li>)}
+                </ul>
+              )}
+              {a.cv && a.cv.summary && <p className="applicant-summary">{a.cv.summary}</p>}
+              {a.cv && a.cv.skills && a.cv.skills.length>0 && (
+                <div className="chip-row" style={{marginTop:8}}>
+                  {a.cv.skills.map(s=><span key={s} className="cv-chip cv-chip-static">{s}</span>)}
+                </div>
+              )}
+              <div className="applicant-applied-at">Кандидатствал на {new Date(a.appliedAt).toLocaleDateString('bg-BG')}</div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
