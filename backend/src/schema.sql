@@ -2,12 +2,25 @@
 -- Run via: npm run migrate  (see src/migrate.js)
 
 CREATE TABLE IF NOT EXISTS users (
-  id            SERIAL PRIMARY KEY,
-  name          VARCHAR(255)  NOT NULL,
-  email         VARCHAR(255)  NOT NULL UNIQUE,
-  password_hash VARCHAR(255)  NOT NULL,
-  role          VARCHAR(20)   NOT NULL CHECK (role IN ('candidate','employer')),
-  created_at    TIMESTAMPTZ   NOT NULL DEFAULT now()
+  id             SERIAL PRIMARY KEY,
+  name           VARCHAR(255)  NOT NULL,
+  email          VARCHAR(255)  NOT NULL UNIQUE,
+  password_hash  VARCHAR(255)  NOT NULL,
+  role           VARCHAR(20)   NOT NULL CHECK (role IN ('candidate','employer')),
+  email_verified BOOLEAN       NOT NULL DEFAULT false,
+  created_at     TIMESTAMPTZ   NOT NULL DEFAULT now()
+);
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT false;
+
+-- Shared by both the registration-verification and forgot-password flows.
+CREATE TABLE IF NOT EXISTS verification_codes (
+  id          SERIAL PRIMARY KEY,
+  user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  code        VARCHAR(6)  NOT NULL,
+  purpose     VARCHAR(20) NOT NULL CHECK (purpose IN ('verify_email','reset_password')),
+  expires_at  TIMESTAMPTZ NOT NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS jobs (
@@ -69,3 +82,4 @@ CREATE INDEX IF NOT EXISTS idx_jobs_created_at  ON jobs(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_apps_user        ON applications(user_id);
 CREATE INDEX IF NOT EXISTS idx_saved_user       ON saved_jobs(user_id);
 CREATE INDEX IF NOT EXISTS idx_cvs_user         ON cvs(user_id);
+CREATE INDEX IF NOT EXISTS idx_verif_user       ON verification_codes(user_id, purpose);

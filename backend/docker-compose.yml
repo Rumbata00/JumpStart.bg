@@ -30,6 +30,9 @@ services:
       CORS_ORIGIN: "*"
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in backend/.env — see .env.example}
       DATABASE_URL: ${DATABASE_URL:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM: ${RESEND_FROM:-}
+      GITHUB_MODELS_TOKEN: ${GITHUB_MODELS_TOKEN:-}
       PGHOST: db
       PGPORT: 5432
       PGUSER: postgres
