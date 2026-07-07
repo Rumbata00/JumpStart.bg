@@ -6,12 +6,16 @@ CREATE TABLE IF NOT EXISTS users (
   name           VARCHAR(255)  NOT NULL,
   email          VARCHAR(255)  NOT NULL UNIQUE,
   password_hash  VARCHAR(255)  NOT NULL,
-  role           VARCHAR(20)   NOT NULL CHECK (role IN ('candidate','employer')),
+  role           VARCHAR(20)   NOT NULL CHECK (role IN ('candidate','employer','admin')),
   email_verified BOOLEAN       NOT NULL DEFAULT false,
   created_at     TIMESTAMPTZ   NOT NULL DEFAULT now()
 );
 
 ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT false;
+
+-- Widen the role check to allow 'admin' (originally just candidate/employer).
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('candidate','employer','admin'));
 
 -- Shared by both the registration-verification and forgot-password flows.
 CREATE TABLE IF NOT EXISTS verification_codes (
