@@ -10,10 +10,16 @@ const EMAIL_USER = process.env.EMAIL_USER;
 const EMAIL_PASS = process.env.GMAIL_APP_PASSWORD;
 const hasCredentials = !!(EMAIL_USER && EMAIL_PASS);
 
+// Explicit host/port 587 (STARTTLS) instead of the "gmail" shorthand
+// (which defaults to port 465) — some hosts block 465 but allow 587.
 const transporter = hasCredentials
   ? nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      requireTLS: true,
       auth: { user: EMAIL_USER, pass: EMAIL_PASS },
+      connectionTimeout: 15000,
     })
   : null;
 
