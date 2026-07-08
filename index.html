@@ -123,15 +123,32 @@
     display:flex;align-items:center;gap:8px;
     background:rgba(255,255,255,0.08);
     border:1px solid rgba(255,255,255,0.2);
-    padding:6px 14px 6px 6px;border-radius:999px;
+    padding:6px 12px 6px 6px;border-radius:999px;
     color:#fff;font-size:13.5px;font-weight:600;
+    transition:background .15s;
   }
+  .user-chip:hover{background:rgba(255,255,255,0.16);}
   .user-avatar{
     width:26px;height:26px;border-radius:50%;
     background:var(--coral);color:#fff;
     display:flex;align-items:center;justify-content:center;
     font-size:11px;font-weight:800;flex-shrink:0;
   }
+  .user-menu{position:relative;}
+  .user-menu-dropdown{
+    position:absolute;top:calc(100% + 8px);right:0;z-index:110;
+    min-width:200px;background:var(--paper);border:1px solid var(--line);
+    border-radius:12px;box-shadow:var(--shadow-lg);
+    padding:6px;animation:slideUp .15s ease;
+  }
+  .user-menu-item{
+    display:flex;align-items:center;gap:10px;width:100%;
+    padding:9px 12px;border-radius:8px;font-size:13.5px;font-weight:600;
+    color:var(--ink);text-align:left;transition:background .15s;
+  }
+  .user-menu-item:hover{background:var(--cream);}
+  .user-menu-item.danger{color:var(--coral-text);}
+  .user-menu-divider{height:1px;background:var(--line);margin:6px 4px;}
 
   .theme-toggle{
     width:38px;height:38px;border-radius:50%;flex-shrink:0;
@@ -793,23 +810,27 @@ const STATIC_PAGES = {
 // downloaded alongside this file). Defaults to a local dev server.
 const API_BASE = (window.JUMPSTART_API_BASE) || 'https://jumpstart-api-vioy.onrender.com/api';
 
-// localStorage keeps the login session across page refreshes. Wrapped in
-// try/catch because some preview/sandbox contexts block storage access —
+// localStorage keeps the login session across page refreshes (and browser
+// restarts — used when "Remember me" is checked). sessionStorage clears
+// when the tab/browser closes — used when it's unchecked. Both are wrapped
+// in try/catch because some preview/sandbox contexts block storage access —
 // in that case we fall back to an in-memory-only session for this tab.
-const safeStorage = (() => {
+function makeSafeStorage(storageObj) {
   let memory = {};
   let usable = true;
   try {
     const k = '__jumpstart_test__';
-    window.localStorage.setItem(k, '1');
-    window.localStorage.removeItem(k);
+    storageObj.setItem(k, '1');
+    storageObj.removeItem(k);
   } catch (e) { usable = false; }
   return {
-    get(key) { try { return usable ? window.localStorage.getItem(key) : memory[key] ?? null; } catch (e) { return memory[key] ?? null; } },
-    set(key, val) { try { if (usable) { window.localStorage.setItem(key, val); return; } } catch (e) {} memory[key] = val; },
-    remove(key) { try { if (usable) { window.localStorage.removeItem(key); return; } } catch (e) {} delete memory[key]; },
+    get(key) { try { return usable ? storageObj.getItem(key) : memory[key] ?? null; } catch (e) { return memory[key] ?? null; } },
+    set(key, val) { try { if (usable) { storageObj.setItem(key, val); return; } } catch (e) {} memory[key] = val; },
+    remove(key) { try { if (usable) { storageObj.removeItem(key); return; } } catch (e) {} delete memory[key]; },
   };
-})();
+}
+const safeStorage = makeSafeStorage(window.localStorage);
+const safeSessionStorage = makeSafeStorage(window.sessionStorage);
 
 class ApiError extends Error {}
 
@@ -964,6 +985,41 @@ function ThemeToggle({theme,onToggle}){
   );
 }
 
+function UserMenu({user,onGoSaved,onGoCv,onGoDashboard,onGoAdmin,onLogout}){
+  const [open,setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(()=>{
+    function onDocDown(e){
+      if(ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener('mousedown', onDocDown);
+    return ()=>document.removeEventListener('mousedown', onDocDown);
+  },[]);
+
+  const go = (fn) => { setOpen(false); fn(); };
+
+  return (
+    <div className="user-menu" ref={ref}>
+      <button className="user-chip" onClick={()=>setOpen(o=>!o)} aria-haspopup="true" aria-expanded={open}>
+        <div className="user-avatar">{user.name.slice(0,2).toUpperCase()}</div>
+        {user.name.split(' ')[0]}
+        <Icon name="chevronDown" size={13}/>
+      </button>
+      {open && (
+        <div className="user-menu-dropdown">
+          <button className="user-menu-item" onClick={()=>go(onGoSaved)}><Icon name="bookmark" size={15}/>Запазени</button>
+          {user.role==='candidate' && <button className="user-menu-item" onClick={()=>go(onGoCv)}><Icon name="fileText" size={15}/>Моето CV</button>}
+          {user.role==='employer' && <button className="user-menu-item" onClick={()=>go(onGoDashboard)}><Icon name="briefcase" size={15}/>Моите обяви</button>}
+          {user.role==='admin' && <button className="user-menu-item" onClick={()=>go(onGoAdmin)}><Icon name="users" size={15}/>Админ панел</button>}
+          <div className="user-menu-divider"></div>
+          <button className="user-menu-item danger" onClick={()=>go(onLogout)}><Icon name="logout" size={15}/>Изход</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Header({user,theme,onToggleTheme,onOpenAuth,onLogout,onGoHome,onGoPost,onGoJobs,onGoSaved,onGoDashboard,onGoCv,onGoAdmin}){
   return (
     <header className="site-header">
@@ -975,10 +1031,6 @@ function Header({user,theme,onToggleTheme,onOpenAuth,onLogout,onGoHome,onGoPost,
         <nav className="main-nav">
           <a href="#" onClick={(e)=>{e.preventDefault();onGoJobs();}} className="nav-link">Обяви за работа</a>
           <a href="#" onClick={(e)=>{e.preventDefault();onGoPost();}} className="nav-link">За работодатели</a>
-          {user && <a href="#" onClick={(e)=>{e.preventDefault();onGoSaved();}} className="nav-link">Запазени</a>}
-          {user && user.role==='candidate' && <a href="#" onClick={(e)=>{e.preventDefault();onGoCv();}} className="nav-link">Моето CV</a>}
-          {user && user.role==='employer' && <a href="#" onClick={(e)=>{e.preventDefault();onGoDashboard();}} className="nav-link">Моите обяви</a>}
-          {user && user.role==='admin' && <a href="#" onClick={(e)=>{e.preventDefault();onGoAdmin();}} className="nav-link">Админ</a>}
         </nav>
         <div className="header-actions">
           <ThemeToggle theme={theme} onToggle={onToggleTheme}/>
@@ -990,11 +1042,7 @@ function Header({user,theme,onToggleTheme,onOpenAuth,onLogout,onGoHome,onGoPost,
           ) : (
             <>
               {user.role==='employer' && <button className="btn btn-coral btn-sm" onClick={onGoPost}><Icon name="plus" size={15}/>Публикувай</button>}
-              <div className="user-chip">
-                <div className="user-avatar">{user.name.slice(0,2).toUpperCase()}</div>
-                {user.name.split(' ')[0]}
-              </div>
-              <button className="btn btn-ghost-light btn-sm" onClick={onLogout} title="Изход"><Icon name="logout" size={15}/></button>
+              <UserMenu user={user} onGoSaved={onGoSaved} onGoCv={onGoCv} onGoDashboard={onGoDashboard} onGoAdmin={onGoAdmin} onLogout={onLogout}/>
             </>
           )}
         </div>
@@ -1280,6 +1328,7 @@ function AuthModal({mode,onClose,onSwitch,onAuthSuccess}){
   const [email,setEmail] = useState('');
   const [password,setPassword] = useState('');
   const [showPass,setShowPass] = useState(false);
+  const [rememberMe,setRememberMe] = useState(true);
   const [errors,setErrors] = useState({});
   const [submitting,setSubmitting] = useState(false);
   const [submitted,setSubmitted] = useState(false);
@@ -1305,7 +1354,7 @@ function AuthModal({mode,onClose,onSwitch,onAuthSuccess}){
         : await api.login({email, password});
       setSubmitting(false);
       setSubmitted(true);
-      setTimeout(()=>{ onAuthSuccess(data); }, 700);
+      setTimeout(()=>{ onAuthSuccess(data, rememberMe); }, 700);
     } catch (err) {
       setSubmitting(false);
       setErrors({general: err.message});
@@ -1361,27 +1410,32 @@ function AuthModal({mode,onClose,onSwitch,onAuthSuccess}){
             {mode==='register' && (
               <div className="form-group">
                 <label>Пълно име</label>
-                <input className={"form-input"+(errors.name?' err':'')} placeholder="Име и фамилия" value={name} onChange={e=>setName(e.target.value)}/>
+                <input autoComplete="name" className={"form-input"+(errors.name?' err':'')} placeholder="Име и фамилия" value={name} onChange={e=>setName(e.target.value)}/>
                 {errors.name && <div className="form-err-msg">{errors.name}</div>}
               </div>
             )}
 
             <div className="form-group">
               <label>Имейл адрес</label>
-              <input type="email" className={"form-input"+(errors.email?' err':'')} placeholder="ivan.petrov@email.bg" value={email} onChange={e=>setEmail(e.target.value)}/>
+              <input type="email" autoComplete="username" className={"form-input"+(errors.email?' err':'')} placeholder="ivan.petrov@email.bg" value={email} onChange={e=>setEmail(e.target.value)}/>
               {errors.email && <div className="form-err-msg">{errors.email}</div>}
             </div>
 
             <div className="form-group">
               <label>Парола</label>
               <div style={{position:'relative'}}>
-                <input type={showPass?'text':'password'} className={"form-input"+(errors.password?' err':'')} placeholder="Минимум 6 символа" value={password} onChange={e=>setPassword(e.target.value)} style={{paddingRight:40}}/>
+                <input type={showPass?'text':'password'} autoComplete={mode==='register'?'new-password':'current-password'} className={"form-input"+(errors.password?' err':'')} placeholder="Минимум 6 символа" value={password} onChange={e=>setPassword(e.target.value)} style={{paddingRight:40}}/>
                 <button type="button" onClick={()=>setShowPass(!showPass)} style={{position:'absolute',right:10,top:9,color:'var(--ink-mute)'}} aria-label="Покажи паролата">
                   <Icon name={showPass?'eyeOff':'eye'} size={17}/>
                 </button>
               </div>
               {errors.password && <div className="form-err-msg">{errors.password}</div>}
               {mode==='register' && !errors.password && <div className="form-hint">Използвайте комбинация от букви и цифри</div>}
+            </div>
+
+            <div className="checkbox-row" style={{marginBottom:18}}>
+              <input type="checkbox" id="rememberMeChk" checked={rememberMe} onChange={e=>setRememberMe(e.target.checked)}/>
+              <label htmlFor="rememberMeChk" style={{margin:0,fontSize:13.5,fontWeight:500,textTransform:'none',color:'var(--ink-soft)'}}>Запомни ме на това устройство</label>
             </div>
 
             <button type="submit" className="btn btn-navy btn-full btn-lg" style={{marginTop:6}} disabled={submitting}>
@@ -2329,8 +2383,10 @@ function App(){
   },[]);
 
   // Restore a logged-in session from a saved token (e.g. after a page refresh).
+  // Checks the "remembered" (localStorage) slot first, then the
+  // this-tab-only (sessionStorage) slot used when "Remember me" was off.
   useEffect(()=>{
-    const saved = safeStorage.get('jumpstart_token');
+    const saved = safeStorage.get('jumpstart_token') || safeSessionStorage.get('jumpstart_token');
     if(!saved) return;
     let cancelled = false;
     api.me(saved).then(u=>{
@@ -2340,6 +2396,7 @@ function App(){
       return refreshUserData(saved);
     }).catch(()=>{
       safeStorage.remove('jumpstart_token');
+      safeSessionStorage.remove('jumpstart_token');
     });
     return ()=>{ cancelled = true; };
   },[]);
@@ -2395,10 +2452,19 @@ function App(){
     }
   };
 
-  const handleAuthSuccess = (data) => {
+  const handleAuthSuccess = (data,rememberMe=true) => {
     setUser(data.user);
     setToken(data.token);
-    safeStorage.set('jumpstart_token', data.token);
+    // Keep the token in only one slot at a time, matching the checkbox at
+    // the moment of login — otherwise a stale copy in the other storage
+    // could resurrect the session after the user expected it to expire.
+    if(rememberMe){
+      safeStorage.set('jumpstart_token', data.token);
+      safeSessionStorage.remove('jumpstart_token');
+    } else {
+      safeSessionStorage.set('jumpstart_token', data.token);
+      safeStorage.remove('jumpstart_token');
+    }
     setAuthMode(null);
     showToast(`Добре дошли, ${data.user.name.split(' ')[0]}!`);
     refreshUserData(data.token);
@@ -2410,6 +2476,7 @@ function App(){
     setApplied([]);
     setSavedJobs([]);
     safeStorage.remove('jumpstart_token');
+    safeSessionStorage.remove('jumpstart_token');
     showToast('Излязохте от профила си.');
     setPage('home');
   };
