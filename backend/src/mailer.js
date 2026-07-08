@@ -1,30 +1,34 @@
+const nodemailer = require('nodemailer');
 require('dotenv').config();
 
-// Without a real RESEND_API_KEY we still want registration / password reset
-// to work end-to-end in dev — so we fall back to logging the email to the
-// console instead of failing. Get a free key at https://resend.com.
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const FROM_ADDRESS = process.env.RESEND_FROM || 'JumpStart <onboarding@resend.dev>';
+// Without real credentials we still want registration / password reset to
+// work end-to-end in dev — so we fall back to logging the email to the
+// console instead of failing. EMAIL_USER is a Gmail address; GMAIL_APP_PASSWORD
+// is an App Password (myaccount.google.com/apppasswords), not the normal
+// account password — requires 2-Step Verification enabled on the account.
+const EMAIL_USER = process.env.EMAIL_USER;
+const EMAIL_PASS = process.env.GMAIL_APP_PASSWORD;
+const hasCredentials = !!(EMAIL_USER && EMAIL_PASS);
+
+const transporter = hasCredentials
+  ? nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: EMAIL_USER, pass: EMAIL_PASS },
+    })
+  : null;
 
 async function sendEmail({ to, subject, html }) {
-  if (!RESEND_API_KEY) {
-    console.log(`[mailer] RESEND_API_KEY not set — email to ${to} (${subject}):\n${html}`);
+  if (!transporter) {
+    console.log(`[mailer] EMAIL_USER/GMAIL_APP_PASSWORD not set — email to ${to} (${subject}):\n${html}`);
     return;
   }
 
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ from: FROM_ADDRESS, to, subject, html }),
+  await transporter.sendMail({
+    from: `"JumpStart" <${EMAIL_USER}>`,
+    to,
+    subject,
+    html,
   });
-
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Resend API error (${res.status}): ${body}`);
-  }
 }
 
 function escapeHtml(str) {
@@ -69,7 +73,7 @@ async function sendPasswordResetEmail(to, code) {
 
 async function sendContactMessage({ name, email, message }) {
   await sendEmail({
-    to: FROM_ADDRESS,
+    to: EMAIL_USER,
     subject: `Ново съобщение от ${name} — JumpStart`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px">

@@ -867,6 +867,10 @@ const api = {
   unsaveJob: (token, jobId) => apiFetch(`/saved/${jobId}`, { method: 'DELETE', token }),
   mySavedJobs: (token) => apiFetch('/saved', { token }).then(d => d.jobs),
   register: (payload) => apiFetch('/auth/register', { method: 'POST', body: payload }),
+  verifyEmail: (payload) => apiFetch('/auth/verify-email', { method: 'POST', body: payload }),
+  resendCode: (payload) => apiFetch('/auth/resend-code', { method: 'POST', body: payload }),
+  forgotPassword: (payload) => apiFetch('/auth/forgot-password', { method: 'POST', body: payload }),
+  resetPassword: (payload) => apiFetch('/auth/reset-password', { method: 'POST', body: payload }),
   login: (payload) => apiFetch('/auth/login', { method: 'POST', body: payload }),
   me: (token) => apiFetch('/auth/me', { token }).then(d => d.user),
   getCv: (token) => apiFetch('/cv', { token }).then(d => d.cv),
@@ -1320,9 +1324,119 @@ function JobDetailModal({job,onClose,user,onOpenAuth,onApplied,applied}){
   );
 }
 
-/* ============ AUTH MODAL ============ */
 /* ============ FORGOT PASSWORD MODAL ============ */
-function AuthModal({mode,onClose,onSwitch,onAuthSuccess}){
+function ForgotPasswordModal({onClose,onDone}){
+  const [step,setStep] = useState('email');
+  const [email,setEmail] = useState('');
+  const [code,setCode] = useState('');
+  const [newPassword,setNewPassword] = useState('');
+  const [submitting,setSubmitting] = useState(false);
+  const [error,setError] = useState('');
+
+  const handleRequestCode = async (ev) => {
+    ev.preventDefault();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ setError('Въведете валиден имейл адрес.'); return; }
+    setSubmitting(true);
+    setError('');
+    try {
+      await api.forgotPassword({email});
+      setStep('code');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleReset = async (ev) => {
+    ev.preventDefault();
+    if(code.trim().length<4){ setError('Въведете кода от имейла.'); return; }
+    if(newPassword.length<6){ setError('Паролата трябва да е поне 6 символа.'); return; }
+    setSubmitting(true);
+    setError('');
+    try {
+      await api.resetPassword({email, code: code.trim(), newPassword});
+      setStep('done');
+      setTimeout(()=>{ onDone(); }, 1400);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-box" onClick={e=>e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <div className="modal-title">Забравена парола</div>
+            <div className="modal-sub">
+              {step==='email' && 'Ще ви изпратим код за смяна на паролата'}
+              {step==='code' && 'Изпратихме код на '+email}
+              {step==='done' && 'Готово!'}
+            </div>
+          </div>
+          <button className="modal-close" onClick={onClose} aria-label="Затвори"><Icon name="x" size={18}/></button>
+        </div>
+        <div className="modal-body">
+          {error && (
+            <div className="form-err-msg" style={{background:'var(--coral-light)',color:'var(--coral-text)',padding:'10px 12px',borderRadius:8,marginBottom:16,fontSize:13.5}}>
+              {error}
+            </div>
+          )}
+
+          {step==='email' && (
+            <form onSubmit={handleRequestCode} noValidate>
+              <div className="form-group">
+                <label>Имейл адрес</label>
+                <input type="email" autoComplete="username" className="form-input" value={email} onChange={e=>setEmail(e.target.value)} autoFocus/>
+              </div>
+              <button type="submit" className="btn btn-navy btn-full btn-lg" disabled={submitting}>
+                {submitting ? 'Изпращане...' : 'Изпрати код'}
+              </button>
+            </form>
+          )}
+
+          {step==='code' && (
+            <form onSubmit={handleReset} noValidate>
+              <div className="form-group">
+                <label>Код от имейла</label>
+                <input
+                  className="form-input"
+                  placeholder="123456"
+                  value={code}
+                  onChange={e=>setCode(e.target.value)}
+                  maxLength={6}
+                  style={{letterSpacing:4,fontSize:18,textAlign:'center',fontWeight:700}}
+                  autoFocus
+                />
+              </div>
+              <div className="form-group">
+                <label>Нова парола</label>
+                <input type="password" autoComplete="new-password" className="form-input" placeholder="Минимум 6 символа" value={newPassword} onChange={e=>setNewPassword(e.target.value)}/>
+              </div>
+              <button type="submit" className="btn btn-navy btn-full btn-lg" disabled={submitting}>
+                {submitting ? 'Смяна...' : 'Смени паролата'}
+              </button>
+            </form>
+          )}
+
+          {step==='done' && (
+            <div className="success-box">
+              <div className="success-icon"><Icon name="check" size={28}/></div>
+              <h3 style={{fontSize:19,marginBottom:6}}>Паролата е сменена!</h3>
+              <p style={{fontSize:13.5,color:'var(--ink-mute)'}}>Вече можете да влезете с новата парола.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ============ AUTH MODAL ============ */
+function AuthModal({mode,onClose,onSwitch,onAuthSuccess,onForgotPassword}){
   const [role,setRole] = useState('candidate');
   const [name,setName] = useState('');
   const [email,setEmail] = useState('');
@@ -1332,6 +1446,11 @@ function AuthModal({mode,onClose,onSwitch,onAuthSuccess}){
   const [errors,setErrors] = useState({});
   const [submitting,setSubmitting] = useState(false);
   const [submitted,setSubmitted] = useState(false);
+  const [verifyEmailPending,setVerifyEmailPending] = useState(null);
+  const [code,setCode] = useState('');
+  const [verifying,setVerifying] = useState(false);
+  const [resending,setResending] = useState(false);
+  const [resendMsg,setResendMsg] = useState('');
 
   const validate = () => {
     const e = {};
@@ -1349,17 +1468,99 @@ function AuthModal({mode,onClose,onSwitch,onAuthSuccess}){
 
     setSubmitting(true);
     try {
-      const data = mode==='register'
-        ? await api.register({name, email, password, role})
-        : await api.login({email, password});
+      if(mode==='register'){
+        const data = await api.register({name, email, password, role});
+        setSubmitting(false);
+        setVerifyEmailPending(data.email);
+      } else {
+        const data = await api.login({email, password});
+        setSubmitting(false);
+        setSubmitted(true);
+        setTimeout(()=>{ onAuthSuccess(data, rememberMe); }, 700);
+      }
+    } catch (err) {
       setSubmitting(false);
+      if(err.data && err.data.needsVerification){
+        setVerifyEmailPending(err.data.email);
+      } else {
+        setErrors({general: err.message});
+      }
+    }
+  };
+
+  const handleVerify = async (ev) => {
+    ev.preventDefault();
+    if(code.trim().length<4){ setErrors({general:'Въведете кода от имейла.'}); return; }
+    setVerifying(true);
+    setErrors({});
+    try {
+      const data = await api.verifyEmail({email: verifyEmailPending, code: code.trim()});
+      setVerifying(false);
       setSubmitted(true);
       setTimeout(()=>{ onAuthSuccess(data, rememberMe); }, 700);
     } catch (err) {
-      setSubmitting(false);
+      setVerifying(false);
       setErrors({general: err.message});
     }
   };
+
+  const handleResend = async () => {
+    setResending(true);
+    setResendMsg('');
+    try {
+      await api.resendCode({email: verifyEmailPending});
+      setResendMsg('Изпратихме нов код на имейла ви.');
+    } catch (err) {
+      setResendMsg(err.message);
+    } finally {
+      setResending(false);
+    }
+  };
+
+  if(verifyEmailPending && !submitted){
+    return (
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-box" onClick={e=>e.stopPropagation()}>
+          <div className="modal-header">
+            <div>
+              <div className="modal-title">Потвърдете имейла си</div>
+              <div className="modal-sub">Изпратихме 6-цифрен код на {verifyEmailPending}</div>
+            </div>
+            <button className="modal-close" onClick={onClose} aria-label="Затвори"><Icon name="x" size={18}/></button>
+          </div>
+          <div className="modal-body">
+            {errors.general && (
+              <div className="form-err-msg" style={{background:'var(--coral-light)',color:'var(--coral-text)',padding:'10px 12px',borderRadius:8,marginBottom:16,fontSize:13.5}}>
+                {errors.general}
+              </div>
+            )}
+            <form onSubmit={handleVerify} noValidate>
+              <div className="form-group">
+                <label>Код за потвърждение</label>
+                <input
+                  className="form-input"
+                  placeholder="123456"
+                  value={code}
+                  onChange={e=>setCode(e.target.value)}
+                  maxLength={6}
+                  style={{letterSpacing:4,fontSize:18,textAlign:'center',fontWeight:700}}
+                  autoFocus
+                />
+              </div>
+              <button type="submit" className="btn btn-navy btn-full btn-lg" style={{marginTop:6}} disabled={verifying}>
+                {verifying ? 'Проверка...' : 'Потвърди'}
+              </button>
+            </form>
+            <div className="modal-switch">
+              {resendMsg ? <span>{resendMsg}</span> : (
+                <>Не получихте код? <button onClick={handleResend} disabled={resending}>{resending?'Изпращане...':'Изпрати нов код'}</button></>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if(submitted){
     return (
@@ -1433,9 +1634,14 @@ function AuthModal({mode,onClose,onSwitch,onAuthSuccess}){
               {mode==='register' && !errors.password && <div className="form-hint">Използвайте комбинация от букви и цифри</div>}
             </div>
 
-            <div className="checkbox-row" style={{marginBottom:18}}>
-              <input type="checkbox" id="rememberMeChk" checked={rememberMe} onChange={e=>setRememberMe(e.target.checked)}/>
-              <label htmlFor="rememberMeChk" style={{margin:0,fontSize:13.5,fontWeight:500,textTransform:'none',color:'var(--ink-soft)'}}>Запомни ме на това устройство</label>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18,flexWrap:'wrap',gap:6}}>
+              <div className="checkbox-row" style={{marginBottom:0}}>
+                <input type="checkbox" id="rememberMeChk" checked={rememberMe} onChange={e=>setRememberMe(e.target.checked)}/>
+                <label htmlFor="rememberMeChk" style={{margin:0,fontSize:13.5,fontWeight:500,textTransform:'none',color:'var(--ink-soft)'}}>Запомни ме</label>
+              </div>
+              {mode==='login' && (
+                <button type="button" onClick={onForgotPassword} style={{fontSize:12.5,color:'var(--ink-mute)',fontWeight:600}}>Забравена парола?</button>
+              )}
             </div>
 
             <button type="submit" className="btn btn-navy btn-full btn-lg" style={{marginTop:6}} disabled={submitting}>
@@ -2344,6 +2550,7 @@ function App(){
   const [user,setUser] = useState(null);
   const [token,setToken] = useState(null);
   const [authMode,setAuthMode] = useState(null);
+  const [forgotPasswordOpen,setForgotPasswordOpen] = useState(false);
   const [selectedJob,setSelectedJob] = useState(null);
   const [savedJobs,setSavedJobs] = useState([]);
   const [applied,setApplied] = useState([]);
@@ -2604,6 +2811,14 @@ function App(){
           onClose={()=>setAuthMode(null)}
           onSwitch={setAuthMode}
           onAuthSuccess={handleAuthSuccess}
+          onForgotPassword={()=>{setAuthMode(null);setForgotPasswordOpen(true);}}
+        />
+      )}
+
+      {forgotPasswordOpen && (
+        <ForgotPasswordModal
+          onClose={()=>setForgotPasswordOpen(false)}
+          onDone={()=>{setForgotPasswordOpen(false);setAuthMode('login');}}
         />
       )}
 
