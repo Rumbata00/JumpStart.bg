@@ -1452,6 +1452,10 @@ function AuthModal({mode,onClose,onSwitch,onAuthSuccess,onForgotPassword}){
   const [resending,setResending] = useState(false);
   const [resendMsg,setResendMsg] = useState('');
 
+  // While registering (or waiting on an email verification code), clicking
+  // the overlay shouldn't discard progress — only the X button should close it.
+  const preventOverlayClose = mode==='register' || !!verifyEmailPending;
+
   const validate = () => {
     const e = {};
     if(mode==='register' && name.trim().length<2) e.name='Моля, въведете вашето име';
@@ -1519,7 +1523,7 @@ function AuthModal({mode,onClose,onSwitch,onAuthSuccess,onForgotPassword}){
 
   if(verifyEmailPending && !submitted){
     return (
-      <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-overlay" onClick={preventOverlayClose ? undefined : onClose}>
         <div className="modal-box" onClick={e=>e.stopPropagation()}>
           <div className="modal-header">
             <div>
@@ -1564,7 +1568,7 @@ function AuthModal({mode,onClose,onSwitch,onAuthSuccess,onForgotPassword}){
 
   if(submitted){
     return (
-      <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-overlay" onClick={preventOverlayClose ? undefined : onClose}>
         <div className="modal-box" onClick={e=>e.stopPropagation()} style={{padding:'10px 0'}}>
           <div className="modal-body">
             <div className="success-box">
@@ -1579,7 +1583,7 @@ function AuthModal({mode,onClose,onSwitch,onAuthSuccess,onForgotPassword}){
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={preventOverlayClose ? undefined : onClose}>
       <div className="modal-box" onClick={e=>e.stopPropagation()}>
         <div className="modal-header">
           <div>
