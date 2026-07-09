@@ -47,8 +47,11 @@ CREATE TABLE IF NOT EXISTS jobs (
   responsibilities JSONB        NOT NULL DEFAULT '[]',
   requirements    JSONB         NOT NULL DEFAULT '[]',
   benefits        JSONB         NOT NULL DEFAULT '[]',
-  created_at      TIMESTAMPTZ   NOT NULL DEFAULT now()
+  created_at      TIMESTAMPTZ   NOT NULL DEFAULT now(),
+  featured_until  TIMESTAMPTZ
 );
+
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS featured_until TIMESTAMPTZ;
 
 CREATE TABLE IF NOT EXISTS applications (
   id          SERIAL PRIMARY KEY,

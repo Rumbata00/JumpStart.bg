@@ -92,7 +92,7 @@ router.patch('/users/:id/ban', requireAuth, requireRole('admin'), async (req, re
 router.get('/jobs', requireAuth, requireRole('admin'), async (req, res) => {
   try {
     const result = await db.query(`
-      SELECT j.id, j.title, j.company, j.city, j.created_at, u.name AS owner_name, u.email AS owner_email
+      SELECT j.id, j.title, j.company, j.city, j.created_at, j.featured_until, u.name AS owner_name, u.email AS owner_email
       FROM jobs j
       LEFT JOIN users u ON u.id = j.owner_id
       ORDER BY j.created_at DESC
@@ -101,11 +101,37 @@ router.get('/jobs', requireAuth, requireRole('admin'), async (req, res) => {
       jobs: result.rows.map((j) => ({
         id: j.id, title: j.title, company: j.company, city: j.city, createdAt: j.created_at,
         ownerName: j.owner_name, ownerEmail: j.owner_email,
+        isFeatured: !!(j.featured_until && new Date(j.featured_until) > new Date()),
+        featuredUntil: j.featured_until,
       })),
     });
   } catch (err) {
     console.error('GET /admin/jobs failed:', err);
     res.status(500).json({ error: 'Възникна грешка при зареждане на обявите.' });
+  }
+});
+
+// PATCH /api/admin/jobs/:id/feature — promote a listing for N days, or pass
+// days: null to un-feature it early. Manual for now: an employer arranges
+// payment out of band (e.g. via the contact form) and an admin flips this.
+router.patch('/jobs/:id/feature', requireAuth, requireRole('admin'), async (req, res) => {
+  if (!/^\d+$/.test(req.params.id)) return res.status(400).json({ error: 'Невалиден идентификатор.' });
+  const { days } = req.body || {};
+  if (days !== null && (!Number.isInteger(days) || days <= 0)) {
+    return res.status(400).json({ error: 'Невалидна стойност за дни.' });
+  }
+
+  try {
+    const result = await db.query(
+      `UPDATE jobs SET featured_until = CASE WHEN $2::int IS NULL THEN NULL ELSE now() + ($2::int * interval '1 day') END
+       WHERE id = $1 RETURNING id, featured_until`,
+      [req.params.id, days]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Обявата не е намерена.' });
+    res.json({ id: result.rows[0].id, featuredUntil: result.rows[0].featured_until });
+  } catch (err) {
+    console.error('PATCH /admin/jobs/:id/feature failed:', err);
+    res.status(500).json({ error: 'Възникна грешка при обновяването на обявата.' });
   }
 });
 

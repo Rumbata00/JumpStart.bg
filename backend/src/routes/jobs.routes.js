@@ -35,6 +35,7 @@ function serializeJob(row) {
     requirements: row.requirements,
     benefits: row.benefits,
     createdAt: row.created_at,
+    isFeatured: !!(row.featured_until && new Date(row.featured_until) > new Date()),
   };
 }
 
@@ -73,7 +74,9 @@ router.get('/', async (req, res) => {
 
   try {
     const result = await db.query(
-      `SELECT * FROM jobs ${where} ORDER BY created_at DESC LIMIT 500`,
+      `SELECT * FROM jobs ${where}
+       ORDER BY (featured_until IS NOT NULL AND featured_until > now()) DESC, created_at DESC
+       LIMIT 500`,
       params
     );
     res.json({ jobs: result.rows.map(serializeJob) });

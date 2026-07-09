@@ -372,8 +372,17 @@
     border-radius:12px;padding:20px 22px;
     display:flex;gap:16px;align-items:flex-start;
     transition:all .15s;cursor:pointer;
+    position:relative;
   }
   .job-card:hover{border-color:var(--line-strong);box-shadow:var(--shadow-md);}
+  .job-card-featured{border-color:var(--coral);background:var(--coral-light);}
+  .job-card-featured:hover{box-shadow:var(--shadow-md);}
+  .featured-ribbon{
+    position:absolute;top:-1px;right:16px;
+    background:var(--coral);color:#fff;
+    font-size:10.5px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;
+    padding:4px 10px;border-radius:0 0 6px 6px;
+  }
   .job-logo{
     width:52px;height:52px;border-radius:10px;flex-shrink:0;
     display:flex;align-items:center;justify-content:center;
@@ -965,6 +974,7 @@ const api = {
   adminBanUser: (token, userId, banned) => apiFetch(`/admin/users/${userId}/ban`, { method: 'PATCH', token, body: { banned } }),
   adminJobs: (token) => apiFetch('/admin/jobs', { token }).then(d => d.jobs),
   adminDeleteJob: (token, jobId) => apiFetch(`/admin/jobs/${jobId}`, { method: 'DELETE', token }),
+  adminFeatureJob: (token, jobId, days) => apiFetch(`/admin/jobs/${jobId}/feature`, { method: 'PATCH', token, body: { days } }),
   sendContact: (payload) => apiFetch('/contact', { method: 'POST', body: payload }),
 };
 
@@ -1237,7 +1247,8 @@ function Categories({onSelect}){
 /* ============ JOB CARD ============ */
 function JobCard({job,saved,onToggleSave,onOpen}){
   return (
-    <div className="job-card" onClick={()=>onOpen(job)}>
+    <div className={"job-card"+(job.isFeatured?' job-card-featured':'')} onClick={()=>onOpen(job)}>
+      {job.isFeatured && <div className="featured-ribbon">Препоръчана</div>}
       <div className="job-logo" style={{background:job.companyColor}}>{job.companyInit}</div>
       <div className="job-main">
         <div className="job-top-row">
@@ -2020,6 +2031,18 @@ function AdminPage({token}){
     }
   };
 
+  const handleFeatureJob = async (job, days) => {
+    setBusyId('feature-'+job.id);
+    try {
+      const result = await api.adminFeatureJob(token, job.id, days);
+      setJobs(prev=>prev.map(j=>j.id===job.id?{...j,featuredUntil:result.featuredUntil,isFeatured:!!(result.featuredUntil && new Date(result.featuredUntil)>new Date())}:j));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   return (
     <div className="container section" style={{paddingTop:32}}>
       <div className="breadcrumb"><span>Начало</span><Icon name="chevronRight" size={12}/><span style={{color:'var(--ink)'}}>Админ панел</span></div>
@@ -2109,7 +2132,7 @@ function AdminPage({token}){
           <div className="post-form-card" style={{padding:0,overflow:'hidden'}}>
             <table className="admin-table">
               <thead>
-                <tr><th>Длъжност</th><th>Компания</th><th>Работодател</th><th>Дата</th><th></th></tr>
+                <tr><th>Длъжност</th><th>Компания</th><th>Работодател</th><th>Дата</th><th>Препоръчана</th><th></th></tr>
               </thead>
               <tbody>
                 {jobs.map(j=>(
@@ -2119,6 +2142,28 @@ function AdminPage({token}){
                     <td>{j.ownerName || '—'}</td>
                     <td>{new Date(j.createdAt).toLocaleDateString('bg-BG')}</td>
                     <td>
+                      {j.isFeatured
+                        ? <span style={{color:'var(--coral-text)',fontWeight:700}}>до {new Date(j.featuredUntil).toLocaleDateString('bg-BG')}</span>
+                        : <span style={{color:'var(--ink-mute)'}}>—</span>}
+                    </td>
+                    <td style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                      {j.isFeatured ? (
+                        <button
+                          className="btn btn-outline btn-sm"
+                          disabled={busyId==='feature-'+j.id}
+                          onClick={()=>handleFeatureJob(j, null)}
+                        >
+                          {busyId==='feature-'+j.id ? '...' : 'Спри препоръката'}
+                        </button>
+                      ) : (
+                        <button
+                          className="btn btn-outline btn-sm"
+                          disabled={busyId==='feature-'+j.id}
+                          onClick={()=>handleFeatureJob(j, 30)}
+                        >
+                          {busyId==='feature-'+j.id ? '...' : 'Препоръчай (30 дни)'}
+                        </button>
+                      )}
                       <button
                         className="btn btn-outline btn-sm"
                         disabled={busyId==='job-'+j.id}
