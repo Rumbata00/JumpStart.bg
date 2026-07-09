@@ -1452,9 +1452,9 @@ function AuthModal({mode,onClose,onSwitch,onAuthSuccess,onForgotPassword}){
   const [resending,setResending] = useState(false);
   const [resendMsg,setResendMsg] = useState('');
 
-  // While registering (or waiting on an email verification code), clicking
-  // the overlay shouldn't discard progress — only the X button should close it.
-  const preventOverlayClose = mode==='register' || !!verifyEmailPending;
+  // Clicking the overlay shouldn't discard in-progress login/registration —
+  // only the X button should close this modal.
+  const preventOverlayClose = true;
 
   const validate = () => {
     const e = {};
