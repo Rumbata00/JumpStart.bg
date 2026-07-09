@@ -210,6 +210,26 @@
     background-size:15px 15px;
     pointer-events:none;
   }
+  .hero-orbit-right{
+    position:absolute;right:-260px;top:38%;transform:translateY(-50%);
+    width:520px;height:520px;border-radius:50%;
+    border:1px solid rgba(255,255,255,0.09);
+    pointer-events:none;
+  }
+  .hero-orbit-right::after{
+    content:'';position:absolute;inset:64px;border-radius:50%;
+    border:1px solid rgba(255,255,255,0.07);
+  }
+  .hero-orbit-right::before{
+    content:'';position:absolute;left:30px;top:22%;width:8px;height:8px;
+    border-radius:50%;background:var(--coral);
+  }
+  .hero-dots-right{
+    position:absolute;right:70px;top:64px;width:100px;height:64px;
+    background-image:radial-gradient(rgba(255,255,255,0.22) 1.5px, transparent 1.5px);
+    background-size:15px 15px;
+    pointer-events:none;
+  }
   .hero-eyebrow{
     color:var(--coral);font-size:13px;font-weight:800;
     letter-spacing:0.08em;text-transform:uppercase;
@@ -656,7 +676,7 @@
     .header-top{flex-wrap:wrap;gap:12px;}
     nav.main-nav{order:3;width:100%;overflow-x:auto;gap:20px;padding-bottom:2px;}
     .hero h1{font-size:30px;}
-    .hero-orbit-left,.hero-dots{display:none;}
+    .hero-orbit-left,.hero-dots,.hero-orbit-right,.hero-dots-right{display:none;}
     .search-panel{grid-template-columns:1fr;}
     .search-divider{display:none;}
     .cat-grid{grid-template-columns:repeat(2,1fr);}
@@ -1132,6 +1152,8 @@ function Hero({onSearch}){
     <section className="hero">
       <div className="hero-orbit-left" aria-hidden="true"></div>
       <div className="hero-dots" aria-hidden="true"></div>
+      <div className="hero-orbit-right" aria-hidden="true"></div>
+      <div className="hero-dots-right" aria-hidden="true"></div>
       <div className="container hero-inner">
         <div className="hero-eyebrow">Над 2 400 активни обяви в България</div>
         <h1>Намерете следващата си роля<br/>по-бързо, отколкото си мислите</h1>
