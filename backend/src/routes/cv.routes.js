@@ -1,8 +1,17 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
+
+const writeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Твърде много заявки. Опитайте отново по-късно.' },
+});
 
 function serializeCv(row) {
   return {
@@ -32,7 +41,7 @@ router.get('/', requireAuth, async (req, res) => {
 });
 
 // PUT /api/cv — create or update (upsert) the logged-in user's CV.
-router.put('/', requireAuth, async (req, res) => {
+router.put('/', writeLimiter, requireAuth, async (req, res) => {
   const { fullName, email, phone, city, summary, skills, experience, education, languages } = req.body || {};
 
   if (!fullName || String(fullName).trim().length < 2) {

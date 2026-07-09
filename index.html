@@ -535,7 +535,17 @@
   .applicant-reasons{margin:10px 0 0;padding-left:18px;}
   .applicant-reasons li{font-size:12.5px;color:var(--ink-mute);line-height:1.7;}
   .applicant-summary{font-size:13.5px;color:var(--ink-soft);margin-top:10px;line-height:1.6;}
-  .applicant-applied-at{font-size:11.5px;color:var(--ink-mute);margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
+  .applicant-applied-at{font-size:11.5px;color:var(--ink-mute);}
+  .applicant-footer-row{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
+  .status-select{
+    border:1px solid var(--line);border-radius:999px;padding:5px 10px;
+    font-size:12px;font-weight:700;background:var(--paper);color:var(--ink);cursor:pointer;
+  }
+  .status-select:focus{outline:none;border-color:var(--accent);}
+  .status-select.status-pending{color:var(--ink-mute);}
+  .status-select.status-reviewed{color:#2451A3;border-color:#2451A3;}
+  .status-select.status-hired{color:var(--green);border-color:var(--green);}
+  .status-select.status-rejected{color:var(--coral-text);border-color:var(--coral);}
 
   /* ===== ADMIN PAGE ===== */
   .admin-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;}
@@ -615,6 +625,13 @@
     .form-row{grid-template-columns:1fr;}
     .hero-stats{gap:22px;flex-wrap:wrap;}
   }
+
+  @media print{
+    body *{visibility:hidden;}
+    #cv-print-area, #cv-print-area *{visibility:visible;}
+    #cv-print-area{position:absolute;left:0;top:0;width:100%;border:none;box-shadow:none;padding:0;}
+    .no-print{display:none !important;}
+  }
 </style>
 </head>
 <body>
@@ -661,6 +678,8 @@ const Icon = ({name,size=18,...props}) => {
     chatBubble: <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>,
     sun: <><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.22 4.22l1.77 1.77M17.99 17.99l1.77 1.77M2 12h2.5M19.5 12H22M4.22 19.78l1.77-1.77M17.99 6.01l1.77-1.77"/></>,
     moon: <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>,
+    edit: <><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></>,
+    trash: <><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></>,
   };
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>{paths[name]}</svg>;
 };
@@ -735,7 +754,6 @@ const STATIC_PAGES = {
       {p:'До 10 активни обяви, обявите се открояват с таг "Препоръчана" и получават приоритет в резултатите от търсене.'},
       {h:'Премиум — за агенции и големи компании'},
       {p:'Неограничен брой обяви, достъп до база с CV-та, employer branding поддръжка и личен акаунт мениджър.'},
-      {p:'За преминаване към платен пакет се свържете с нас през страница "Контакти".'},
     ],
   },
   'cv-database': {
@@ -859,10 +877,13 @@ const api = {
     return apiFetch('/jobs' + (qs ? '?' + qs : '')).then(d => d.jobs);
   },
   createJob: (token, form) => apiFetch('/jobs', { method: 'POST', token, body: form }).then(d => d.job),
+  updateJob: (token, jobId, form) => apiFetch(`/jobs/${jobId}`, { method: 'PUT', token, body: form }).then(d => d.job),
+  deleteJob: (token, jobId) => apiFetch(`/jobs/${jobId}`, { method: 'DELETE', token }),
   myJobs: (token) => apiFetch('/jobs/mine', { token }).then(d => d.jobs),
   jobApplicants: (token, jobId) => apiFetch(`/jobs/${jobId}/applicants`, { token }).then(d => d.applicants),
   applyToJob: (token, jobId) => apiFetch(`/jobs/${jobId}/apply`, { method: 'POST', token }),
-  myApplications: (token) => apiFetch('/applications', { token }).then(d => d.jobIds),
+  myApplicationsDetailed: (token) => apiFetch('/applications', { token }).then(d => d.applications),
+  updateApplicationStatus: (token, applicationId, status) => apiFetch(`/applications/${applicationId}/status`, { method: 'PATCH', token, body: { status } }).then(d => d.application),
   saveJob: (token, jobId) => apiFetch(`/saved/${jobId}`, { method: 'POST', token }),
   unsaveJob: (token, jobId) => apiFetch(`/saved/${jobId}`, { method: 'DELETE', token }),
   mySavedJobs: (token) => apiFetch('/saved', { token }).then(d => d.jobs),
@@ -877,6 +898,11 @@ const api = {
   saveCv: (token, payload) => apiFetch('/cv', { method: 'PUT', token, body: payload }).then(d => d.cv),
   chat: (messages) => apiFetch('/chat', { method: 'POST', body: { messages } }).then(d => d.reply),
   adminStats: (token) => apiFetch('/admin/stats', { token }),
+  adminUsers: (token) => apiFetch('/admin/users', { token }).then(d => d.users),
+  adminBanUser: (token, userId, banned) => apiFetch(`/admin/users/${userId}/ban`, { method: 'PATCH', token, body: { banned } }),
+  adminJobs: (token) => apiFetch('/admin/jobs', { token }).then(d => d.jobs),
+  adminDeleteJob: (token, jobId) => apiFetch(`/admin/jobs/${jobId}`, { method: 'DELETE', token }),
+  sendContact: (payload) => apiFetch('/contact', { method: 'POST', body: payload }),
 };
 
 // The backend stores raw timestamps; these turn them into the same
@@ -1259,9 +1285,10 @@ function JobsPage({jobs,savedIds,onToggleSave,onOpen,initialKw,initialCity,loadi
 }
 
 /* ============ JOB DETAIL MODAL ============ */
-function JobDetailModal({job,onClose,user,onOpenAuth,onApplied,applied}){
+function JobDetailModal({job,onClose,user,onOpenAuth,onApplied,applied,applicationStatuses}){
   if(!job) return null;
   const alreadyApplied = applied.includes(job.id);
+  const appliedStatus = applicationStatuses ? applicationStatuses[job.id] : null;
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box detail-modal" onClick={e=>e.stopPropagation()}>
@@ -1310,7 +1337,8 @@ function JobDetailModal({job,onClose,user,onOpenAuth,onApplied,applied}){
           <div className="detail-actions">
             {alreadyApplied ? (
               <button className="btn btn-outline btn-full" disabled style={{color:'var(--green)',borderColor:'var(--green)'}}>
-                <Icon name="checkCircle" size={16}/>Вече кандидатствахте
+                <Icon name="checkCircle" size={16}/>
+                {appliedStatus && appliedStatus!=='pending' ? `Кандидатствахте · ${STATUS_LABEL[appliedStatus]}` : 'Вече кандидатствахте'}
               </button>
             ) : user ? (
               <button className="btn btn-coral btn-full btn-lg" onClick={()=>onApplied(job.id)}>Кандидатствай сега</button>
@@ -1667,8 +1695,14 @@ function AuthModal({mode,onClose,onSwitch,onAuthSuccess,onForgotPassword}){
 }
 
 /* ============ POST JOB PAGE ============ */
-function PostJobPage({user,onOpenAuth,onPublish}){
-  const [form,setForm] = useState({title:'',company:user&&user.role==='employer'?user.name:'',city:'София',type:'Пълен работен ден',salaryMin:'',salaryMax:'',description:'',category:'it'});
+function PostJobPage({user,onOpenAuth,onPublish,onUpdate,editingJob,onDoneEditing}){
+  const isEditing = !!editingJob;
+  const [form,setForm] = useState(()=> isEditing ? {
+    title: editingJob.title, company: editingJob.company, city: editingJob.city,
+    type: editingJob.type, salaryMin: editingJob.salaryMin || '', salaryMax: editingJob.salaryMax || '',
+    description: editingJob.description, category: editingJob.category,
+    responsibilities: editingJob.responsibilities, requirements: editingJob.requirements, benefits: editingJob.benefits,
+  } : {title:'',company:user&&user.role==='employer'?user.name:'',city:'София',type:'Пълен работен ден',salaryMin:'',salaryMax:'',description:'',category:'it'});
   const [posted,setPosted] = useState(false);
   const [submitting,setSubmitting] = useState(false);
   const [error,setError] = useState('');
@@ -1682,7 +1716,11 @@ function PostJobPage({user,onOpenAuth,onPublish}){
     setSubmitting(true);
     setError('');
     try {
-      await onPublish(form);
+      if(isEditing){
+        await onUpdate(editingJob.id, form);
+      } else {
+        await onPublish(form);
+      }
       setPosted(true);
     } catch (err) {
       setError(err.message);
@@ -1696,9 +1734,13 @@ function PostJobPage({user,onOpenAuth,onPublish}){
       <div className="container section">
         <div className="empty-state" style={{background:'var(--green-bg)',border:'1px dashed var(--green)',maxWidth:520,margin:'0 auto'}}>
           <div className="success-icon" style={{margin:'0 auto 14px'}}><Icon name="check" size={26}/></div>
-          <h4>Обявата е публикувана успешно!</h4>
-          <p>Вашата обява вече е видима за хиляди кандидати в платформата.</p>
-          <button className="btn btn-navy" onClick={()=>setPosted(false)}>Публикувай друга обява</button>
+          <h4>{isEditing ? 'Обявата е обновена успешно!' : 'Обявата е публикувана успешно!'}</h4>
+          <p>{isEditing ? 'Промените вече са видими за кандидатите.' : 'Вашата обява вече е видима за хиляди кандидати в платформата.'}</p>
+          {isEditing ? (
+            <button className="btn btn-navy" onClick={onDoneEditing}>Обратно към моите обяви</button>
+          ) : (
+            <button className="btn btn-navy" onClick={()=>setPosted(false)}>Публикувай друга обява</button>
+          )}
         </div>
       </div>
     );
@@ -1719,12 +1761,12 @@ function PostJobPage({user,onOpenAuth,onPublish}){
   return (
     <div className="container section" style={{paddingTop:32}}>
       <div className="breadcrumb">
-        <span>Начало</span><Icon name="chevronRight" size={12}/><span style={{color:'var(--ink)'}}>Публикувай обява</span>
+        <span>Начало</span><Icon name="chevronRight" size={12}/><span style={{color:'var(--ink)'}}>{isEditing ? 'Редактирай обява' : 'Публикувай обява'}</span>
       </div>
       <div className="page-title-row">
         <div>
-          <h1>Публикувайте обява за работа</h1>
-          <div className="result-count">Достигнете до над 156 000 активни кандидати</div>
+          <h1>{isEditing ? 'Редактирайте обявата' : 'Публикувайте обява за работа'}</h1>
+          <div className="result-count">{isEditing ? editingJob.title : 'Достигнете до над 156 000 активни кандидати'}</div>
         </div>
       </div>
 
@@ -1792,7 +1834,9 @@ function PostJobPage({user,onOpenAuth,onPublish}){
               <textarea className="form-input" rows="6" placeholder="Опишете отговорностите, изискванията и предимствата на позицията..." value={form.description} onChange={e=>set('description',e.target.value)} required style={{resize:'vertical',fontFamily:'inherit'}}></textarea>
             </div>
 
-            <button type="submit" className="btn btn-coral btn-lg" style={{marginTop:8}} disabled={submitting}>{submitting?'Публикуване...':'Публикувай обявата'}</button>
+            <button type="submit" className="btn btn-coral btn-lg" style={{marginTop:8}} disabled={submitting}>
+              {submitting ? (isEditing?'Запазване...':'Публикуване...') : (isEditing?'Запази промените':'Публикувай обявата')}
+            </button>
           </form>
         </div>
 
@@ -1841,14 +1885,17 @@ function AdminStatCard({label,value}){
 
 function AdminPage({token}){
   const [stats,setStats] = useState(null);
+  const [users,setUsers] = useState([]);
+  const [jobs,setJobs] = useState([]);
   const [loading,setLoading] = useState(true);
   const [error,setError] = useState('');
+  const [busyId,setBusyId] = useState(null);
 
   useEffect(()=>{
     let cancelled = false;
     setLoading(true);
-    api.adminStats(token).then(data=>{
-      if(!cancelled){ setStats(data); setLoading(false); }
+    Promise.all([api.adminStats(token), api.adminUsers(token), api.adminJobs(token)]).then(([statsData,usersData,jobsData])=>{
+      if(!cancelled){ setStats(statsData); setUsers(usersData); setJobs(jobsData); setLoading(false); }
     }).catch(err=>{
       if(!cancelled){ setError(err.message); setLoading(false); }
     });
@@ -1859,6 +1906,30 @@ function AdminPage({token}){
     if(!stats || stats.registrationsByDay.length===0) return 1;
     return Math.max(...stats.registrationsByDay.map(d=>d.count));
   },[stats]);
+
+  const handleToggleBan = async (u) => {
+    setBusyId('user-'+u.id);
+    try {
+      await api.adminBanUser(token, u.id, !u.isBanned);
+      setUsers(prev=>prev.map(x=>x.id===u.id?{...x,isBanned:!u.isBanned}:x));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleDeleteJob = async (job) => {
+    setBusyId('job-'+job.id);
+    try {
+      await api.adminDeleteJob(token, job.id);
+      setJobs(prev=>prev.filter(j=>j.id!==job.id));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   return (
     <div className="container section" style={{paddingTop:32}}>
@@ -1916,17 +1987,75 @@ function AdminPage({token}){
               </tbody>
             </table>
           </div>
+
+          <h3 style={{marginTop:32,marginBottom:14}}>Всички потребители ({users.length})</h3>
+          <div className="post-form-card" style={{padding:0,overflow:'hidden'}}>
+            <table className="admin-table">
+              <thead>
+                <tr><th>Име</th><th>Имейл</th><th>Роля</th><th>Статус</th><th></th></tr>
+              </thead>
+              <tbody>
+                {users.map(u=>(
+                  <tr key={u.id}>
+                    <td>{u.name}</td>
+                    <td>{u.email}</td>
+                    <td><span className={"role-badge role-"+u.role}>{u.role}</span></td>
+                    <td>{u.isBanned ? <span style={{color:'var(--coral-text)',fontWeight:700}}>Блокиран</span> : <span style={{color:'var(--green)',fontWeight:700}}>Активен</span>}</td>
+                    <td>
+                      <button
+                        className="btn btn-outline btn-sm"
+                        disabled={busyId==='user-'+u.id}
+                        onClick={()=>handleToggleBan(u)}
+                      >
+                        {busyId==='user-'+u.id ? '...' : (u.isBanned ? 'Отблокирай' : 'Блокирай')}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <h3 style={{marginTop:32,marginBottom:14}}>Всички обяви ({jobs.length})</h3>
+          <div className="post-form-card" style={{padding:0,overflow:'hidden'}}>
+            <table className="admin-table">
+              <thead>
+                <tr><th>Длъжност</th><th>Компания</th><th>Работодател</th><th>Дата</th><th></th></tr>
+              </thead>
+              <tbody>
+                {jobs.map(j=>(
+                  <tr key={j.id}>
+                    <td>{j.title}</td>
+                    <td>{j.company}</td>
+                    <td>{j.ownerName || '—'}</td>
+                    <td>{new Date(j.createdAt).toLocaleDateString('bg-BG')}</td>
+                    <td>
+                      <button
+                        className="btn btn-outline btn-sm"
+                        disabled={busyId==='job-'+j.id}
+                        onClick={()=>handleDeleteJob(j)}
+                      >
+                        {busyId==='job-'+j.id ? '...' : 'Изтрий'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </>
       )}
     </div>
   );
 }
 
-function DashboardPage({token,onOpen,refreshKey}){
+function DashboardPage({token,onOpen,refreshKey,onEdit,onDeleted}){
   const [myJobs,setMyJobs] = useState([]);
   const [loading,setLoading] = useState(true);
   const [error,setError] = useState('');
   const [viewingJob,setViewingJob] = useState(null);
+  const [deletingId,setDeletingId] = useState(null);
+  const [confirmingId,setConfirmingId] = useState(null);
 
   useEffect(()=>{
     let cancelled = false;
@@ -1938,6 +2067,20 @@ function DashboardPage({token,onOpen,refreshKey}){
     });
     return ()=>{ cancelled = true; };
   },[token,refreshKey]);
+
+  const handleDelete = async (job) => {
+    setDeletingId(job.id);
+    try {
+      await api.deleteJob(token, job.id);
+      setMyJobs(prev=>prev.filter(j=>j.id!==job.id));
+      setConfirmingId(null);
+      if(onDeleted) onDeleted(job.id);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   if(viewingJob){
     return <ApplicantsPage job={viewingJob} token={token} onBack={()=>setViewingJob(null)}/>;
@@ -1962,10 +2105,28 @@ function DashboardPage({token,onOpen,refreshKey}){
           {myJobs.map(j=>(
             <div key={j.id}>
               <JobCard job={j} saved={false} onToggleSave={()=>{}} onOpen={onOpen}/>
-              <div style={{display:'flex',justifyContent:'flex-end',margin:'-4px 0 8px'}}>
-                <button className="btn btn-outline btn-sm" onClick={()=>setViewingJob(j)}>
-                  <Icon name="users" size={14}/>Виж кандидатите
-                </button>
+              <div style={{display:'flex',justifyContent:'flex-end',gap:8,margin:'-4px 0 8px',flexWrap:'wrap'}}>
+                {confirmingId===j.id ? (
+                  <>
+                    <span style={{fontSize:13,color:'var(--coral-text)',alignSelf:'center',fontWeight:600}}>Сигурни ли сте?</span>
+                    <button className="btn btn-outline btn-sm" onClick={()=>setConfirmingId(null)} disabled={deletingId===j.id}>Отказ</button>
+                    <button className="btn btn-coral btn-sm" onClick={()=>handleDelete(j)} disabled={deletingId===j.id}>
+                      {deletingId===j.id ? 'Изтриване...' : 'Да, изтрий'}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button className="btn btn-outline btn-sm" onClick={()=>onEdit(j)}>
+                      <Icon name="edit" size={14}/>Редактирай
+                    </button>
+                    <button className="btn btn-outline btn-sm" onClick={()=>setConfirmingId(j.id)}>
+                      <Icon name="trash" size={14}/>Изтрий
+                    </button>
+                    <button className="btn btn-outline btn-sm" onClick={()=>setViewingJob(j)}>
+                      <Icon name="users" size={14}/>Виж кандидатите
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ))}
@@ -2019,6 +2180,7 @@ function scoreApplicant(applicant, job){
 }
 
 const TIER_LABEL = {high:'Силно подходящ', medium:'Частично подходящ', low:'Слабо подходящ'};
+const STATUS_LABEL = {pending:'Изчаква преглед', reviewed:'Прегледан', rejected:'Отхвърлен', hired:'Нает'};
 
 function ApplicantsPage({job,token,onBack}){
   const [applicants,setApplicants] = useState([]);
@@ -2026,6 +2188,7 @@ function ApplicantsPage({job,token,onBack}){
   const [error,setError] = useState('');
   const [filter,setFilter] = useState('all');
   const [sortBy,setSortBy] = useState('score');
+  const [updatingId,setUpdatingId] = useState(null);
 
   useEffect(()=>{
     let cancelled = false;
@@ -2037,6 +2200,18 @@ function ApplicantsPage({job,token,onBack}){
     });
     return ()=>{ cancelled = true; };
   },[job.id,token]);
+
+  const handleStatusChange = async (applicant, status) => {
+    setUpdatingId(applicant.applicationId);
+    try {
+      await api.updateApplicationStatus(token, applicant.applicationId, status);
+      setApplicants(prev=>prev.map(a=>a.applicationId===applicant.applicationId?{...a,status}:a));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   const scored = useMemo(()=>applicants.map(a=>({...a, match:scoreApplicant(a,job)})),[applicants,job]);
 
@@ -2104,7 +2279,17 @@ function ApplicantsPage({job,token,onBack}){
                   {a.cv.skills.map(s=><span key={s} className="cv-chip cv-chip-static">{s}</span>)}
                 </div>
               )}
-              <div className="applicant-applied-at">Кандидатствал на {new Date(a.appliedAt).toLocaleDateString('bg-BG')}</div>
+              <div className="applicant-footer-row" style={{display:'flex',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:8}}>
+                <div className="applicant-applied-at">Кандидатствал на {new Date(a.appliedAt).toLocaleDateString('bg-BG')}</div>
+                <select
+                  className={"status-select status-"+a.status}
+                  value={a.status}
+                  disabled={updatingId===a.applicationId}
+                  onChange={e=>handleStatusChange(a, e.target.value)}
+                >
+                  {Object.entries(STATUS_LABEL).map(([val,label])=><option key={val} value={val}>{label}</option>)}
+                </select>
+              </div>
             </div>
           ))}
         </div>
@@ -2246,13 +2431,16 @@ function CvForm({initial,onCancel,onSave,saving,error}){
 
 function CvView({cv,onEdit}){
   return (
-    <div className="post-form-card cv-page-layout">
+    <div className="post-form-card cv-page-layout" id="cv-print-area">
       <div className="cv-view-header">
         <div>
           <h3 style={{fontSize:22,marginBottom:4}}>{cv.fullName}</h3>
           <div style={{fontSize:13.5,color:'var(--ink-mute)'}}>{[cv.email,cv.phone,cv.city].filter(Boolean).join(' · ')}</div>
         </div>
-        <button className="btn btn-navy" onClick={onEdit}><Icon name="fileText" size={15}/>Редактирай</button>
+        <div className="no-print" style={{display:'flex',gap:8}}>
+          <button className="btn btn-outline" onClick={()=>window.print()}><Icon name="fileText" size={15}/>Изтегли PDF</button>
+          <button className="btn btn-navy" onClick={onEdit}><Icon name="fileText" size={15}/>Редактирай</button>
+        </div>
       </div>
 
       {cv.summary && (<><h4>За мен</h4><p>{cv.summary}</p></>)}
@@ -2365,7 +2553,68 @@ function CvPage({user,token,onOpenAuth}){
 
 /* ============ FOOTER ============ */
 /* ============ STATIC PAGE ============ */
-function StaticPage({data}){
+function ContactForm(){
+  const [name,setName] = useState('');
+  const [email,setEmail] = useState('');
+  const [message,setMessage] = useState('');
+  const [submitting,setSubmitting] = useState(false);
+  const [sent,setSent] = useState(false);
+  const [error,setError] = useState('');
+
+  const handleSubmit = async (ev) => {
+    ev.preventDefault();
+    if(name.trim().length<2){ setError('Моля, въведете вашето име.'); return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ setError('Въведете валиден имейл адрес.'); return; }
+    if(message.trim().length<5){ setError('Съобщението е твърде кратко.'); return; }
+    setError('');
+    setSubmitting(true);
+    try {
+      await api.sendContact({name: name.trim(), email: email.trim(), message: message.trim()});
+      setSent(true);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if(sent){
+    return (
+      <div className="success-box" style={{marginTop:24}}>
+        <div className="success-icon"><Icon name="check" size={28}/></div>
+        <h3 style={{fontSize:19,marginBottom:6}}>Съобщението е изпратено!</h3>
+        <p style={{fontSize:13.5,color:'var(--ink-mute)'}}>Ще ви отговорим в рамките на 1-2 работни дни.</p>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} noValidate style={{marginTop:20}}>
+      {error && (
+        <div className="form-err-msg" style={{background:'var(--coral-light)',color:'var(--coral-text)',padding:'10px 12px',borderRadius:8,marginBottom:16,fontSize:13.5}}>
+          {error}
+        </div>
+      )}
+      <div className="form-group">
+        <label>Име</label>
+        <input className="form-input" placeholder="Вашето име" value={name} onChange={e=>setName(e.target.value)}/>
+      </div>
+      <div className="form-group">
+        <label>Имейл</label>
+        <input type="email" className="form-input" placeholder="you@example.com" value={email} onChange={e=>setEmail(e.target.value)}/>
+      </div>
+      <div className="form-group">
+        <label>Съобщение</label>
+        <textarea className="form-input" rows={5} placeholder="Как можем да помогнем?" value={message} onChange={e=>setMessage(e.target.value)}/>
+      </div>
+      <button type="submit" className="btn btn-coral" disabled={submitting}>
+        {submitting ? 'Изпращане...' : 'Изпрати съобщение'}
+      </button>
+    </form>
+  );
+}
+
+function StaticPage({data,pageKey,onNavigate}){
   if(!data) return null;
   return (
     <div className="container section" style={{paddingTop:32}}>
@@ -2389,6 +2638,13 @@ function StaticPage({data}){
           );
           return null;
         })}
+        {pageKey==='contact' && <ContactForm/>}
+        {pageKey==='pricing' && (
+          <div style={{marginTop:8}}>
+            <p style={{marginBottom:14}}>За преминаване към платен пакет се свържете с нас — ще отговорим в рамките на 1-2 работни дни.</p>
+            <button className="btn btn-coral" onClick={()=>onNavigate('contact')}>Свържете се с нас</button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -2558,10 +2814,12 @@ function App(){
   const [selectedJob,setSelectedJob] = useState(null);
   const [savedJobs,setSavedJobs] = useState([]);
   const [applied,setApplied] = useState([]);
+  const [applicationStatuses,setApplicationStatuses] = useState({});
   const [toast,setToast] = useState(null);
   const [searchKw,setSearchKw] = useState('');
   const [searchCity,setSearchCity] = useState('Всички градове');
   const [dashboardRefreshKey,setDashboardRefreshKey] = useState(0);
+  const [editingJob,setEditingJob] = useState(null);
   const [theme,setTheme] = useState(()=>{
     const saved = safeStorage.get('jumpstart_theme');
     if(saved==='dark' || saved==='light') return saved;
@@ -2615,14 +2873,20 @@ function App(){
   // Pulls the logged-in user's applications + saved jobs from the server.
   const refreshUserData = async (tok) => {
     try {
-      const [appliedIds, saved] = await Promise.all([api.myApplications(tok), api.mySavedJobs(tok)]);
-      setApplied(appliedIds);
+      const [applications, saved] = await Promise.all([api.myApplicationsDetailed(tok), api.mySavedJobs(tok)]);
+      setApplied(applications.map(a=>a.jobId));
+      setApplicationStatuses(Object.fromEntries(applications.map(a=>[a.jobId, a.status])));
       setSavedJobs(hydrateJobs(saved));
     } catch (err) {
       // Non-fatal: user stays logged in even if this background sync fails.
       console.error('Failed to refresh user data:', err);
     }
   };
+
+  // Entry points into the "post a job" page that aren't the edit flow —
+  // make sure a stale editingJob from a previous edit doesn't leak into a
+  // fresh "publish a new job" form.
+  const handleGoPost = () => { setEditingJob(null); setPage('post'); };
 
   const handleSearch = (kw,city) => {
     setSearchKw(kw);
@@ -2655,6 +2919,7 @@ function App(){
     try {
       await api.applyToJob(token, id);
       setApplied(prev=>prev.includes(id)?prev:[...prev,id]);
+      setApplicationStatuses(prev=>({...prev, [id]: 'pending'}));
       showToast('Кандидатурата ви беше изпратена успешно!');
     } catch (err) {
       showToast(err.message);
@@ -2685,6 +2950,7 @@ function App(){
     setUser(null);
     setToken(null);
     setApplied([]);
+    setApplicationStatuses({});
     setSavedJobs([]);
     safeStorage.remove('jumpstart_token');
     safeSessionStorage.remove('jumpstart_token');
@@ -2699,6 +2965,18 @@ function App(){
     showToast('Обявата е публикувана успешно!');
   };
 
+  const handleUpdateJob = async (jobId, form) => {
+    const job = await api.updateJob(token, jobId, form);
+    setJobs(prev=>prev.map(j=>j.id===job.id?hydrateJob(job):j));
+    setDashboardRefreshKey(k=>k+1);
+    showToast('Обявата е обновена успешно!');
+  };
+
+  const handleJobDeleted = (jobId) => {
+    setJobs(prev=>prev.filter(j=>j.id!==jobId));
+    showToast('Обявата е изтрита.');
+  };
+
   return (
     <div>
       <Header
@@ -2708,7 +2986,7 @@ function App(){
         onOpenAuth={setAuthMode}
         onLogout={handleLogout}
         onGoHome={()=>setPage('home')}
-        onGoPost={()=>setPage('post')}
+        onGoPost={handleGoPost}
         onGoJobs={()=>{setSearchKw('');setSearchCity('Всички градове');setPage('jobs');}}
         onGoSaved={()=>setPage('saved')}
         onGoDashboard={()=>setPage('dashboard')}
@@ -2754,7 +3032,7 @@ function App(){
                 <p>Публикувайте обява безплатно и достигнете до хиляди активни кандидати още днес.</p>
               </div>
               <div className="cta-band-actions">
-                <button className="btn btn-coral btn-lg" onClick={()=>setPage('post')}>Публикувай обява</button>
+                <button className="btn btn-coral btn-lg" onClick={handleGoPost}>Публикувай обява</button>
               </div>
             </div>
           </div>
@@ -2766,7 +3044,14 @@ function App(){
       )}
 
       {page==='post' && (
-        <PostJobPage user={user} onOpenAuth={setAuthMode} onPublish={handlePublishJob}/>
+        <PostJobPage
+          user={user}
+          onOpenAuth={setAuthMode}
+          onPublish={handlePublishJob}
+          onUpdate={handleUpdateJob}
+          editingJob={editingJob}
+          onDoneEditing={()=>{setEditingJob(null);setPage('dashboard');}}
+        />
       )}
 
       {page==='saved' && (
@@ -2774,7 +3059,13 @@ function App(){
       )}
 
       {page==='dashboard' && (
-        <DashboardPage token={token} onOpen={setSelectedJob} refreshKey={dashboardRefreshKey}/>
+        <DashboardPage
+          token={token}
+          onOpen={setSelectedJob}
+          refreshKey={dashboardRefreshKey}
+          onEdit={(job)=>{setEditingJob(job);setPage('post');window.scrollTo({top:0,behavior:'smooth'});}}
+          onDeleted={handleJobDeleted}
+        />
       )}
 
       {page==='admin' && user && user.role==='admin' && (
@@ -2786,12 +3077,12 @@ function App(){
       )}
 
       {STATIC_PAGES[page] && (
-        <StaticPage data={STATIC_PAGES[page]}/>
+        <StaticPage data={STATIC_PAGES[page]} pageKey={page} onNavigate={(key)=>{setPage(key);window.scrollTo({top:0,behavior:'smooth'});}}/>
       )}
 
       <Footer
         onGoCv={()=>setPage('cv')}
-        onGoPost={()=>setPage('post')}
+        onGoPost={handleGoPost}
         onGoJobs={()=>{setSearchKw('');setSearchCity('Всички градове');setPage('jobs');}}
         onGoStatic={(key)=>{setPage(key);window.scrollTo({top:0,behavior:'smooth'});}}
       />
@@ -2806,6 +3097,7 @@ function App(){
           onOpenAuth={(m)=>{setSelectedJob(null);setAuthMode(m);}}
           onApplied={handleApply}
           applied={applied}
+          applicationStatuses={applicationStatuses}
         />
       )}
 

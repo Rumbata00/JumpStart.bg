@@ -8,10 +8,12 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash  VARCHAR(255)  NOT NULL,
   role           VARCHAR(20)   NOT NULL CHECK (role IN ('candidate','employer','admin')),
   email_verified BOOLEAN       NOT NULL DEFAULT false,
+  is_banned      BOOLEAN       NOT NULL DEFAULT false,
   created_at     TIMESTAMPTZ   NOT NULL DEFAULT now()
 );
 
 ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_banned BOOLEAN NOT NULL DEFAULT false;
 
 -- Widen the role check to allow 'admin' (originally just candidate/employer).
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
@@ -53,8 +55,13 @@ CREATE TABLE IF NOT EXISTS applications (
   user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   job_id      INTEGER NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
   applied_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  status      VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','reviewed','rejected','hired')),
   UNIQUE(user_id, job_id)
 );
+
+ALTER TABLE applications ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'pending';
+ALTER TABLE applications DROP CONSTRAINT IF EXISTS applications_status_check;
+ALTER TABLE applications ADD CONSTRAINT applications_status_check CHECK (status IN ('pending','reviewed','rejected','hired'));
 
 CREATE TABLE IF NOT EXISTS saved_jobs (
   id        SERIAL PRIMARY KEY,

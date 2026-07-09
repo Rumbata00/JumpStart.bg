@@ -1,8 +1,19 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const db = require('../db');
 const { requireAuth, requireRole } = require('../middleware/auth');
 
 const router = express.Router();
+
+// Only guards the write endpoints below (create/edit/delete/apply) — job
+// search/browsing (GET) stays unlimited.
+const writeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Твърде много заявки. Опитайте отново по-късно.' },
+});
 
 function serializeJob(row) {
   return {
@@ -100,7 +111,7 @@ router.get('/:id/applicants', requireAuth, requireRole('employer'), async (req, 
     }
 
     const result = await db.query(
-      `SELECT u.id, u.name, u.email, a.applied_at,
+      `SELECT u.id, u.name, u.email, a.id AS application_id, a.applied_at, a.status,
               c.full_name, c.phone, c.city, c.summary, c.skills, c.experience, c.education, c.languages
        FROM applications a
        JOIN users u ON u.id = a.user_id
@@ -112,9 +123,11 @@ router.get('/:id/applicants', requireAuth, requireRole('employer'), async (req, 
 
     const applicants = result.rows.map((row) => ({
       id: row.id,
+      applicationId: row.application_id,
       name: row.name,
       email: row.email,
       appliedAt: row.applied_at,
+      status: row.status,
       cv: row.full_name === null ? null : {
         fullName: row.full_name,
         phone: row.phone,
@@ -147,7 +160,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/jobs — employers only.
-router.post('/', requireAuth, requireRole('employer'), async (req, res) => {
+router.post('/', writeLimiter, requireAuth, requireRole('employer'), async (req, res) => {
   const {
     title, company, city, type, category,
     salaryMin, salaryMax, description,
@@ -187,8 +200,77 @@ router.post('/', requireAuth, requireRole('employer'), async (req, res) => {
   }
 });
 
+// PUT /api/jobs/:id — owner-only edit.
+router.put('/:id', writeLimiter, requireAuth, requireRole('employer'), async (req, res) => {
+  if (!/^\d+$/.test(req.params.id)) return res.status(400).json({ error: 'Невалиден идентификатор.' });
+
+  const {
+    title, company, city, type, category,
+    salaryMin, salaryMax, description,
+    responsibilities, requirements, benefits,
+  } = req.body || {};
+
+  if (!title || !company || !description) {
+    return res.status(400).json({ error: 'Длъжност, компания и описание са задължителни.' });
+  }
+
+  try {
+    const existing = await db.query('SELECT owner_id FROM jobs WHERE id = $1', [req.params.id]);
+    if (existing.rows.length === 0) return res.status(404).json({ error: 'Обявата не е намерена.' });
+    if (existing.rows[0].owner_id !== req.user.id) {
+      return res.status(403).json({ error: 'Нямате права да редактирате тази обява.' });
+    }
+
+    const companyInit = String(company).trim().slice(0, 2).toUpperCase();
+    const min = parseInt(salaryMin, 10) || null;
+    const max = parseInt(salaryMax, 10) || (min ? min + 500 : null);
+
+    const result = await db.query(
+      `UPDATE jobs SET
+        title = $1, category = $2, company = $3, company_init = $4,
+        city = $5, is_remote = $6, type = $7, salary_min = $8, salary_max = $9,
+        description = $10, responsibilities = $11, requirements = $12, benefits = $13
+       WHERE id = $14
+       RETURNING *`,
+      [
+        title, category || 'it', company, companyInit,
+        city || 'София', type === 'Дистанционна работа', type || 'Пълен работен ден',
+        min, max,
+        description,
+        JSON.stringify(responsibilities && responsibilities.length ? responsibilities : ['Изпълнение на задачите, описани от работодателя']),
+        JSON.stringify(requirements && requirements.length ? requirements : ['Виж пълно описание по-горе']),
+        JSON.stringify(benefits && benefits.length ? benefits : ['Обсъжда се на интервю']),
+        req.params.id,
+      ]
+    );
+    res.json({ job: serializeJob(result.rows[0]) });
+  } catch (err) {
+    console.error('PUT /jobs/:id failed:', err);
+    res.status(500).json({ error: 'Възникна грешка при редактирането на обявата.' });
+  }
+});
+
+// DELETE /api/jobs/:id — owner-only. Cascades to applications/saved_jobs
+// referencing this job (schema.sql has ON DELETE CASCADE on both).
+router.delete('/:id', writeLimiter, requireAuth, requireRole('employer'), async (req, res) => {
+  if (!/^\d+$/.test(req.params.id)) return res.status(400).json({ error: 'Невалиден идентификатор.' });
+  try {
+    const existing = await db.query('SELECT owner_id FROM jobs WHERE id = $1', [req.params.id]);
+    if (existing.rows.length === 0) return res.status(404).json({ error: 'Обявата не е намерена.' });
+    if (existing.rows[0].owner_id !== req.user.id) {
+      return res.status(403).json({ error: 'Нямате права да изтриете тази обява.' });
+    }
+
+    await db.query('DELETE FROM jobs WHERE id = $1', [req.params.id]);
+    res.json({ deleted: true });
+  } catch (err) {
+    console.error('DELETE /jobs/:id failed:', err);
+    res.status(500).json({ error: 'Възникна грешка при изтриването на обявата.' });
+  }
+});
+
 // POST /api/jobs/:id/apply
-router.post('/:id/apply', requireAuth, async (req, res) => {
+router.post('/:id/apply', writeLimiter, requireAuth, async (req, res) => {
   if (!/^\d+$/.test(req.params.id)) return res.status(400).json({ error: 'Невалиден идентификатор.' });
   try {
     const job = await db.query('SELECT id FROM jobs WHERE id = $1', [req.params.id]);

@@ -1,8 +1,17 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
+
+const writeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Твърде много заявки. Опитайте отново по-късно.' },
+});
 
 function serializeJob(row) {
   return {
@@ -45,7 +54,7 @@ router.get('/', requireAuth, async (req, res) => {
 });
 
 // POST /api/saved/:jobId
-router.post('/:jobId', requireAuth, async (req, res) => {
+router.post('/:jobId', writeLimiter, requireAuth, async (req, res) => {
   if (!/^\d+$/.test(req.params.jobId)) return res.status(400).json({ error: 'Невалиден идентификатор.' });
   try {
     await db.query(
@@ -61,7 +70,7 @@ router.post('/:jobId', requireAuth, async (req, res) => {
 });
 
 // DELETE /api/saved/:jobId
-router.delete('/:jobId', requireAuth, async (req, res) => {
+router.delete('/:jobId', writeLimiter, requireAuth, async (req, res) => {
   try {
     await db.query('DELETE FROM saved_jobs WHERE user_id = $1 AND job_id = $2', [req.user.id, req.params.jobId]);
     res.json({ saved: false });

@@ -234,6 +234,10 @@ router.post('/login', authLimiter, async (req, res) => {
       return res.status(401).json({ error: 'Грешен имейл или парола.' });
     }
 
+    if (user.is_banned) {
+      return res.status(403).json({ error: 'Профилът е деактивиран. Свържете се с администратор.' });
+    }
+
     if (!user.email_verified) {
       return res.status(403).json({
         error: 'Моля, потвърдете имейл адреса си, за да влезете.',
@@ -252,8 +256,11 @@ router.post('/login', authLimiter, async (req, res) => {
 
 router.get('/me', requireAuth, async (req, res) => {
   try {
-    const result = await db.query('SELECT id, name, email, role FROM users WHERE id = $1', [req.user.id]);
+    const result = await db.query('SELECT id, name, email, role, is_banned FROM users WHERE id = $1', [req.user.id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Потребителят не е намерен.' });
+    if (result.rows[0].is_banned) {
+      return res.status(403).json({ error: 'Профилът е деактивиран. Свържете се с администратор.' });
+    }
     res.json({ user: publicUser(result.rows[0]) });
   } catch (err) {
     console.error('GET /auth/me failed:', err);
