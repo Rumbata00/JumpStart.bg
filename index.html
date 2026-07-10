@@ -311,6 +311,11 @@
   .hero-visual-card-1{top:0;left:10px;width:230px;transform:rotate(-4deg);}
   .hero-visual-card-2{top:158px;right:0;width:200px;transform:rotate(3deg);}
   .hero-visual-card-3{bottom:6px;left:40px;width:210px;transform:rotate(-2deg);}
+  @keyframes heroVisualFade{
+    0%{opacity:0;transform:translateY(6px);}
+    100%{opacity:1;transform:translateY(0);}
+  }
+  .hero-visual-fade{animation:heroVisualFade .5s ease;}
 
   /* ===== SECTIONS ===== */
   .section{padding:56px 0;}
@@ -900,11 +905,10 @@ const STATIC_PAGES = {
 // downloaded alongside this file). Defaults to a local dev server.
 const API_BASE = (window.JUMPSTART_API_BASE) || 'https://jumpstart-api-vioy.onrender.com/api';
 
-// localStorage keeps the login session across page refreshes (and browser
-// restarts — used when "Remember me" is checked). sessionStorage clears
-// when the tab/browser closes — used when it's unchecked. Both are wrapped
-// in try/catch because some preview/sandbox contexts block storage access —
-// in that case we fall back to an in-memory-only session for this tab.
+// localStorage keeps the login session across page refreshes and browser
+// restarts — users stay logged in until they explicitly log out. Wrapped in
+// try/catch because some preview/sandbox contexts block storage access — in
+// that case we fall back to an in-memory-only session for this tab.
 function makeSafeStorage(storageObj) {
   let memory = {};
   let usable = true;
@@ -920,7 +924,6 @@ function makeSafeStorage(storageObj) {
   };
 }
 const safeStorage = makeSafeStorage(window.localStorage);
-const safeSessionStorage = makeSafeStorage(window.sessionStorage);
 
 class ApiError extends Error {}
 
@@ -960,8 +963,6 @@ const api = {
   unsaveJob: (token, jobId) => apiFetch(`/saved/${jobId}`, { method: 'DELETE', token }),
   mySavedJobs: (token) => apiFetch('/saved', { token }).then(d => d.jobs),
   register: (payload) => apiFetch('/auth/register', { method: 'POST', body: payload }),
-  verifyEmail: (payload) => apiFetch('/auth/verify-email', { method: 'POST', body: payload }),
-  resendCode: (payload) => apiFetch('/auth/resend-code', { method: 'POST', body: payload }),
   forgotPassword: (payload) => apiFetch('/auth/forgot-password', { method: 'POST', body: payload }),
   resetPassword: (payload) => apiFetch('/auth/reset-password', { method: 'POST', body: payload }),
   login: (payload) => apiFetch('/auth/login', { method: 'POST', body: payload }),
@@ -1155,9 +1156,40 @@ function Header({user,theme,onToggleTheme,onOpenAuth,onLogout,onGoHome,onGoPost,
 }
 
 /* ============ HERO / SEARCH ============ */
+const HERO_VISUAL_SETS = [
+  {
+    card1:{init:'СК',color:'#2451A3',title:'Senior Frontend',sub:'Софтуерна Кула · София',salary:'3 200 – 4 800 €'},
+    card2:{icon:'checkCircle',color:'var(--green)',text:'Кандидатурата е изпратена'},
+    card3:{stat:'98%',label:'доволни кандидати'},
+  },
+  {
+    card1:{init:'КВ',color:'#E67E22',title:'UX/UI Дизайнер',sub:'Креативна Агенция Вижън · Пловдив',salary:'2 800 – 4 200 €'},
+    card2:{icon:'bell',color:'var(--coral)',text:'Нови обяви всеки ден'},
+    card3:{stat:'156K',label:'регистрирани потребители'},
+  },
+  {
+    card1:{init:'ТР',color:'#2E7D4F',title:'Търговски представител',sub:'Тракия Ритейл · Варна',salary:'2 000 – 3 500 €'},
+    card2:{icon:'users',color:'#2451A3',text:'890+ компании наемат'},
+    card3:{stat:'2 431',label:'активни обяви'},
+  },
+];
+
 function Hero({onSearch}){
   const [kw,setKw] = useState('');
   const [city,setCity] = useState('Всички градове');
+  const [visualIndex,setVisualIndex] = useState(0);
+
+  // Rotates the decorative right-side cards through a few example sets —
+  // purely cosmetic, so a plain interval (no cleanup edge cases) is fine.
+  useEffect(()=>{
+    const id = setInterval(()=>{
+      setVisualIndex(i=>(i+1)%HERO_VISUAL_SETS.length);
+    }, 7000);
+    return ()=>clearInterval(id);
+  },[]);
+
+  const visual = HERO_VISUAL_SETS[visualIndex];
+
   return (
     <section className="hero">
       <div className="hero-orbit-left" aria-hidden="true"></div>
@@ -1197,23 +1229,25 @@ function Hero({onSearch}){
 
       <div className="hero-visual" aria-hidden="true">
         <div className="hero-visual-card hero-visual-card-1">
-          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
-            <div className="job-logo" style={{width:36,height:36,fontSize:13,background:'#2451A3'}}>СК</div>
+          <div key={'c1-'+visualIndex} className="hero-visual-fade" style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
+            <div className="job-logo" style={{width:36,height:36,fontSize:13,background:visual.card1.color}}>{visual.card1.init}</div>
             <div>
-              <div style={{fontWeight:700,fontSize:13.5,color:'var(--ink)'}}>Senior Frontend</div>
-              <div style={{fontSize:11.5,color:'var(--ink-mute)'}}>Софтуерна Кула · София</div>
+              <div style={{fontWeight:700,fontSize:13.5,color:'var(--ink)'}}>{visual.card1.title}</div>
+              <div style={{fontSize:11.5,color:'var(--ink-mute)'}}>{visual.card1.sub}</div>
             </div>
           </div>
-          <span className="tag tag-new">3 200 – 4 800 €</span>
+          <span key={'s1-'+visualIndex} className="hero-visual-fade tag tag-new">{visual.card1.salary}</span>
         </div>
         <div className="hero-visual-card hero-visual-card-2">
-          <div style={{display:'flex',alignItems:'center',gap:8,color:'var(--green)',fontWeight:700,fontSize:13}}>
-            <Icon name="checkCircle" size={18}/>Кандидатурата е изпратена
+          <div key={'c2-'+visualIndex} className="hero-visual-fade" style={{display:'flex',alignItems:'center',gap:8,color:visual.card2.color,fontWeight:700,fontSize:13}}>
+            <Icon name={visual.card2.icon} size={18}/>{visual.card2.text}
           </div>
         </div>
         <div className="hero-visual-card hero-visual-card-3">
-          <div style={{fontSize:24,fontWeight:800,color:'var(--accent)'}}>98%</div>
-          <div style={{fontSize:11.5,color:'var(--ink-mute)'}}>доволни кандидати</div>
+          <div key={'c3-'+visualIndex} className="hero-visual-fade">
+            <div style={{fontSize:24,fontWeight:800,color:'var(--accent)'}}>{visual.card3.stat}</div>
+            <div style={{fontSize:11.5,color:'var(--ink-mute)'}}>{visual.card3.label}</div>
+          </div>
         </div>
       </div>
     </section>
@@ -1570,15 +1604,9 @@ function AuthModal({mode,onClose,onSwitch,onAuthSuccess,onForgotPassword}){
   const [email,setEmail] = useState('');
   const [password,setPassword] = useState('');
   const [showPass,setShowPass] = useState(false);
-  const [rememberMe,setRememberMe] = useState(true);
   const [errors,setErrors] = useState({});
   const [submitting,setSubmitting] = useState(false);
   const [submitted,setSubmitted] = useState(false);
-  const [verifyEmailPending,setVerifyEmailPending] = useState(null);
-  const [code,setCode] = useState('');
-  const [verifying,setVerifying] = useState(false);
-  const [resending,setResending] = useState(false);
-  const [resendMsg,setResendMsg] = useState('');
 
   // Clicking the overlay shouldn't discard in-progress login/registration —
   // only the X button should close this modal.
@@ -1600,99 +1628,17 @@ function AuthModal({mode,onClose,onSwitch,onAuthSuccess,onForgotPassword}){
 
     setSubmitting(true);
     try {
-      if(mode==='register'){
-        const data = await api.register({name, email, password, role});
-        setSubmitting(false);
-        setVerifyEmailPending(data.email);
-      } else {
-        const data = await api.login({email, password});
-        setSubmitting(false);
-        setSubmitted(true);
-        setTimeout(()=>{ onAuthSuccess(data, rememberMe); }, 700);
-      }
+      const data = mode==='register'
+        ? await api.register({name, email, password, role})
+        : await api.login({email, password});
+      setSubmitting(false);
+      setSubmitted(true);
+      setTimeout(()=>{ onAuthSuccess(data); }, 700);
     } catch (err) {
       setSubmitting(false);
-      if(err.data && err.data.needsVerification){
-        setVerifyEmailPending(err.data.email);
-      } else {
-        setErrors({general: err.message});
-      }
-    }
-  };
-
-  const handleVerify = async (ev) => {
-    ev.preventDefault();
-    if(code.trim().length<4){ setErrors({general:'Въведете кода от имейла.'}); return; }
-    setVerifying(true);
-    setErrors({});
-    try {
-      const data = await api.verifyEmail({email: verifyEmailPending, code: code.trim()});
-      setVerifying(false);
-      setSubmitted(true);
-      setTimeout(()=>{ onAuthSuccess(data, rememberMe); }, 700);
-    } catch (err) {
-      setVerifying(false);
       setErrors({general: err.message});
     }
   };
-
-  const handleResend = async () => {
-    setResending(true);
-    setResendMsg('');
-    try {
-      await api.resendCode({email: verifyEmailPending});
-      setResendMsg('Изпратихме нов код на имейла ви.');
-    } catch (err) {
-      setResendMsg(err.message);
-    } finally {
-      setResending(false);
-    }
-  };
-
-  if(verifyEmailPending && !submitted){
-    return (
-      <div className="modal-overlay" onClick={preventOverlayClose ? undefined : onClose}>
-        <div className="modal-box" onClick={e=>e.stopPropagation()}>
-          <div className="modal-header">
-            <div>
-              <div className="modal-title">Потвърдете имейла си</div>
-              <div className="modal-sub">Изпратихме 6-цифрен код на {verifyEmailPending}</div>
-            </div>
-            <button className="modal-close" onClick={onClose} aria-label="Затвори"><Icon name="x" size={18}/></button>
-          </div>
-          <div className="modal-body">
-            {errors.general && (
-              <div className="form-err-msg" style={{background:'var(--coral-light)',color:'var(--coral-text)',padding:'10px 12px',borderRadius:8,marginBottom:16,fontSize:13.5}}>
-                {errors.general}
-              </div>
-            )}
-            <form onSubmit={handleVerify} noValidate>
-              <div className="form-group">
-                <label>Код за потвърждение</label>
-                <input
-                  className="form-input"
-                  placeholder="123456"
-                  value={code}
-                  onChange={e=>setCode(e.target.value)}
-                  maxLength={6}
-                  style={{letterSpacing:4,fontSize:18,textAlign:'center',fontWeight:700}}
-                  autoFocus
-                />
-              </div>
-              <button type="submit" className="btn btn-navy btn-full btn-lg" style={{marginTop:6}} disabled={verifying}>
-                {verifying ? 'Проверка...' : 'Потвърди'}
-              </button>
-            </form>
-            <div className="modal-switch">
-              {resendMsg ? <span>{resendMsg}</span> : (
-                <>Не получихте код? <button onClick={handleResend} disabled={resending}>{resending?'Изпращане...':'Изпрати нов код'}</button></>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if(submitted){
     return (
@@ -1766,15 +1712,11 @@ function AuthModal({mode,onClose,onSwitch,onAuthSuccess,onForgotPassword}){
               {mode==='register' && !errors.password && <div className="form-hint">Използвайте комбинация от букви и цифри</div>}
             </div>
 
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18,flexWrap:'wrap',gap:6}}>
-              <div className="checkbox-row" style={{marginBottom:0}}>
-                <input type="checkbox" id="rememberMeChk" checked={rememberMe} onChange={e=>setRememberMe(e.target.checked)}/>
-                <label htmlFor="rememberMeChk" style={{margin:0,fontSize:13.5,fontWeight:500,textTransform:'none',color:'var(--ink-soft)'}}>Запомни ме</label>
-              </div>
-              {mode==='login' && (
+            {mode==='login' && (
+              <div style={{textAlign:'right',marginBottom:18}}>
                 <button type="button" onClick={onForgotPassword} style={{fontSize:12.5,color:'var(--ink-mute)',fontWeight:600}}>Забравена парола?</button>
-              )}
-            </div>
+              </div>
+            )}
 
             <button type="submit" className="btn btn-navy btn-full btn-lg" style={{marginTop:6}} disabled={submitting}>
               {submitting ? 'Момент...' : (mode==='register'?'Създай безплатен профил':'Вход')}
@@ -2985,11 +2927,11 @@ function App(){
     return ()=>{ cancelled = true; };
   },[]);
 
-  // Restore a logged-in session from a saved token (e.g. after a page refresh).
-  // Checks the "remembered" (localStorage) slot first, then the
-  // this-tab-only (sessionStorage) slot used when "Remember me" was off.
+  // Restore a logged-in session from a saved token (e.g. after a page
+  // refresh or reopening the browser) — users stay logged in until they
+  // explicitly log out.
   useEffect(()=>{
-    const saved = safeStorage.get('jumpstart_token') || safeSessionStorage.get('jumpstart_token');
+    const saved = safeStorage.get('jumpstart_token');
     if(!saved) return;
     let cancelled = false;
     api.me(saved).then(u=>{
@@ -2999,7 +2941,6 @@ function App(){
       return refreshUserData(saved);
     }).catch(()=>{
       safeStorage.remove('jumpstart_token');
-      safeSessionStorage.remove('jumpstart_token');
     });
     return ()=>{ cancelled = true; };
   },[]);
@@ -3062,19 +3003,10 @@ function App(){
     }
   };
 
-  const handleAuthSuccess = (data,rememberMe=true) => {
+  const handleAuthSuccess = (data) => {
     setUser(data.user);
     setToken(data.token);
-    // Keep the token in only one slot at a time, matching the checkbox at
-    // the moment of login — otherwise a stale copy in the other storage
-    // could resurrect the session after the user expected it to expire.
-    if(rememberMe){
-      safeStorage.set('jumpstart_token', data.token);
-      safeSessionStorage.remove('jumpstart_token');
-    } else {
-      safeSessionStorage.set('jumpstart_token', data.token);
-      safeStorage.remove('jumpstart_token');
-    }
+    safeStorage.set('jumpstart_token', data.token);
     setAuthMode(null);
     showToast(`Добре дошли, ${data.user.name.split(' ')[0]}!`);
     refreshUserData(data.token);
@@ -3087,7 +3019,6 @@ function App(){
     setApplicationStatuses({});
     setSavedJobs([]);
     safeStorage.remove('jumpstart_token');
-    safeSessionStorage.remove('jumpstart_token');
     showToast('Излязохте от профила си.');
     setPage('home');
   };

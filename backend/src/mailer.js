@@ -45,16 +45,6 @@ async function sendCodeEmail({ to, subject, heading, intro, code }) {
   }
 }
 
-async function sendVerificationEmail(to, code) {
-  await sendCodeEmail({
-    to,
-    subject: 'Потвърдете имейл адреса си — JumpStart',
-    heading: 'Потвърдете имейл адреса си',
-    intro: 'Използвайте кода по-долу, за да завършите регистрацията си в JumpStart:',
-    code,
-  });
-}
-
 async function sendPasswordResetEmail(to, code) {
   await sendCodeEmail({
     to,
@@ -75,4 +65,4 @@ async function sendContactMessage({ name, email, message }) {
   });
 }
 
-module.exports = { sendVerificationEmail, sendPasswordResetEmail, sendContactMessage };
+module.exports = { sendPasswordResetEmail, sendContactMessage };

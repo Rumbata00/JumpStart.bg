@@ -4,7 +4,7 @@ const rateLimit = require('express-rate-limit');
 const db = require('../db');
 const { signToken } = require('../utils/jwt');
 const { requireAuth } = require('../middleware/auth');
-const { sendVerificationEmail, sendPasswordResetEmail } = require('../mailer');
+const { sendPasswordResetEmail } = require('../mailer');
 
 const router = express.Router();
 
@@ -80,81 +80,18 @@ router.post('/register', authLimiter, async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
     const result = await db.query(
-      `INSERT INTO users (name, email, password_hash, role)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO users (name, email, password_hash, role, email_verified)
+       VALUES ($1, $2, $3, $4, true)
        RETURNING id, name, email, role`,
       [String(name).trim(), normalizedEmail, passwordHash, role]
     );
 
     const user = result.rows[0];
-    const code = await issueCode(user.id, 'verify_email');
-    try {
-      await sendVerificationEmail(user.email, code);
-    } catch (err) {
-      console.error('Failed to send verification email:', err);
-    }
-
-    res.status(201).json({ pendingVerification: true, email: user.email });
+    const token = signToken(user);
+    res.status(201).json({ token, user: publicUser(user) });
   } catch (err) {
     console.error('POST /auth/register failed:', err);
     res.status(500).json({ error: 'Възникна грешка при регистрацията. Опитайте отново.' });
-  }
-});
-
-router.post('/verify-email', authLimiter, async (req, res) => {
-  const { email, code } = req.body || {};
-  if (!email || !code) {
-    return res.status(400).json({ error: 'Въведете имейл и код за потвърждение.' });
-  }
-
-  const normalizedEmail = String(email).toLowerCase().trim();
-
-  try {
-    const userResult = await db.query('SELECT * FROM users WHERE email = $1', [normalizedEmail]);
-    const user = userResult.rows[0];
-    if (!user) return res.status(400).json({ error: 'Невалиден имейл или код.' });
-    if (user.email_verified) {
-      return res.status(400).json({ error: 'Профилът вече е потвърден. Опитайте да влезете.' });
-    }
-
-    const valid = await consumeCode(user.id, 'verify_email', code);
-    if (!valid) {
-      return res.status(400).json({ error: 'Невалиден или изтекъл код. Изпратете нов.' });
-    }
-
-    await db.query('UPDATE users SET email_verified = true WHERE id = $1', [user.id]);
-
-    const token = signToken(user);
-    res.json({ token, user: publicUser(user) });
-  } catch (err) {
-    console.error('POST /auth/verify-email failed:', err);
-    res.status(500).json({ error: 'Възникна грешка при потвърждаването. Опитайте отново.' });
-  }
-});
-
-router.post('/resend-code', authLimiter, async (req, res) => {
-  const { email } = req.body || {};
-  if (!email) return res.status(400).json({ error: 'Въведете имейл адрес.' });
-
-  const normalizedEmail = String(email).toLowerCase().trim();
-
-  try {
-    const result = await db.query('SELECT * FROM users WHERE email = $1', [normalizedEmail]);
-    const user = result.rows[0];
-    if (user && !user.email_verified) {
-      const code = await issueCode(user.id, 'verify_email');
-      try {
-        await sendVerificationEmail(user.email, code);
-      } catch (err) {
-        console.error('Failed to resend verification email:', err);
-      }
-    }
-    // Same response whether or not the account exists/is already verified —
-    // avoids leaking which emails are registered.
-    res.json({ sent: true });
-  } catch (err) {
-    console.error('POST /auth/resend-code failed:', err);
-    res.status(500).json({ error: 'Възникна грешка. Опитайте отново.' });
   }
 });
 
@@ -236,14 +173,6 @@ router.post('/login', authLimiter, async (req, res) => {
 
     if (user.is_banned) {
       return res.status(403).json({ error: 'Профилът е деактивиран. Свържете се с администратор.' });
-    }
-
-    if (!user.email_verified) {
-      return res.status(403).json({
-        error: 'Моля, потвърдете имейл адреса си, за да влезете.',
-        needsVerification: true,
-        email: user.email,
-      });
     }
 
     const token = signToken(user);
