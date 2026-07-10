@@ -606,6 +606,11 @@
     width:36px;height:36px;border-radius:8px;background:var(--coral);color:#fff;
     display:flex;align-items:center;justify-content:center;flex-shrink:0;
   }
+  .chat-faq-toggle{
+    background:transparent !important;border:1.5px solid var(--line);color:var(--ink-mute) !important;
+    font-weight:800;font-size:15px;
+  }
+  .chat-faq-toggle:hover{border-color:var(--accent);color:var(--accent) !important;}
   .detail-actions{display:flex;gap:10px;margin-top:26px;padding-top:22px;border-top:1px solid var(--line);}
 
   /* ===== APPLICANTS / MATCHING ===== */
@@ -2800,6 +2805,7 @@ function ChatWidget({token}){
   const [input,setInput] = useState('');
   const [thinking,setThinking] = useState(false);
   const [hasChatted,setHasChatted] = useState(false);
+  const [quickListOpen,setQuickListOpen] = useState(true);
   const bodyRef = useRef(null);
 
   useEffect(()=>{
@@ -2809,6 +2815,7 @@ function ChatWidget({token}){
   const ask = (entry) => {
     if(thinking) return;
     setHasChatted(true);
+    setQuickListOpen(false);
     setMessages(m=>[...m, {from:'user', text:entry.q}]);
     setThinking(true);
     setTimeout(()=>{
@@ -2822,6 +2829,7 @@ function ChatWidget({token}){
     const text = input.trim();
     if(!text || thinking) return;
     setHasChatted(true);
+    setQuickListOpen(false);
     const history = [...messages, {from:'user', text}];
     setMessages(history);
     setInput('');
@@ -2857,7 +2865,7 @@ function ChatWidget({token}){
               <div className="chat-msg bot chat-typing"><span></span><span></span><span></span></div>
             )}
           </div>
-          {!hasChatted && (
+          {quickListOpen && (
             <div className="chat-quick-list">
               {FAQ_ENTRIES.map(entry=>(
                 <button key={entry.q} className="chat-quick-btn" onClick={()=>ask(entry)} disabled={thinking}>{entry.q}</button>
@@ -2865,6 +2873,9 @@ function ChatWidget({token}){
             </div>
           )}
           <form onSubmit={handleSend} className="chat-input-row">
+            {hasChatted && (
+              <button type="button" className="chat-faq-toggle" aria-label="Готови въпроси" title="Готови въпроси" onClick={()=>setQuickListOpen(o=>!o)}>?</button>
+            )}
             <input placeholder="Напишете въпрос..." value={input} onChange={e=>setInput(e.target.value)} disabled={thinking}/>
             <button type="submit" aria-label="Изпрати" disabled={thinking}><Icon name="arrowRight" size={16}/></button>
           </form>
