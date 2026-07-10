@@ -135,6 +135,20 @@ router.patch('/jobs/:id/feature', requireAuth, requireRole('admin'), async (req,
   }
 });
 
+// DELETE /api/admin/jobs/seed-demo — removes only the demo listings inserted
+// by `npm run seed` (owner_id IS NULL). Never touches jobs posted by a real
+// employer account, since those always have an owner_id. Must be registered
+// before the /:id route below, or Express would match "seed-demo" as an id.
+router.delete('/jobs/seed-demo', requireAuth, requireRole('admin'), async (req, res) => {
+  try {
+    const result = await db.query('DELETE FROM jobs WHERE owner_id IS NULL RETURNING id');
+    res.json({ deleted: result.rows.length });
+  } catch (err) {
+    console.error('DELETE /admin/jobs/seed-demo failed:', err);
+    res.status(500).json({ error: 'Възникна грешка при изтриването на demo обявите.' });
+  }
+});
+
 // DELETE /api/admin/jobs/:id — admin override, not restricted to the owner.
 router.delete('/jobs/:id', requireAuth, requireRole('admin'), async (req, res) => {
   if (!/^\d+$/.test(req.params.id)) return res.status(400).json({ error: 'Невалиден идентификатор.' });
