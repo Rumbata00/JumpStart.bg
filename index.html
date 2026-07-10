@@ -880,7 +880,7 @@ const STATIC_PAGES = {
     blocks: [
       {p:'Имате въпрос, обратна връзка или искате да преминете към платен пакет за работодатели? Пишете ни — отговаряме в рамките на 1-2 работни дни.'},
       {table:[
-        ['Имейл','jumpstart.official1@gmail.com'],
+        ['Имейл','jumpstart.bg.official@gmail.com'],
         ['Локация','гр. София, България'],
       ]},
     ],
@@ -910,7 +910,7 @@ const STATIC_PAGES = {
       {h:'Права на потребителите'},
       {p:'Можете да поискате преглед, корекция или изтриване на профила и данните си по всяко време, като се свържете с нас през страница "Контакти".'},
       {h:'Въпроси относно поверителността'},
-      {p:'При въпроси, пишете на contact@jumpstart.bg.'},
+      {p:'При въпроси, пишете на jumpstart.bg.official@gmail.com.'},
     ],
   },
 };
@@ -920,10 +920,11 @@ const STATIC_PAGES = {
 // downloaded alongside this file). Defaults to a local dev server.
 const API_BASE = (window.JUMPSTART_API_BASE) || 'https://jumpstart-api-vioy.onrender.com/api';
 
-// localStorage keeps the login session across page refreshes and browser
-// restarts — users stay logged in until they explicitly log out. Wrapped in
-// try/catch because some preview/sandbox contexts block storage access — in
-// that case we fall back to an in-memory-only session for this tab.
+// localStorage keeps the login session across page refreshes (and browser
+// restarts — used when "Remember me" is checked). sessionStorage clears
+// when the tab/browser closes — used when it's unchecked. Both are wrapped
+// in try/catch because some preview/sandbox contexts block storage access —
+// in that case we fall back to an in-memory-only session for this tab.
 function makeSafeStorage(storageObj) {
   let memory = {};
   let usable = true;
@@ -939,6 +940,7 @@ function makeSafeStorage(storageObj) {
   };
 }
 const safeStorage = makeSafeStorage(window.localStorage);
+const safeSessionStorage = makeSafeStorage(window.sessionStorage);
 
 class ApiError extends Error {}
 
@@ -1607,6 +1609,7 @@ function AuthModal({mode,onClose,onSwitch,onAuthSuccess,onForgotPassword}){
   const [email,setEmail] = useState('');
   const [password,setPassword] = useState('');
   const [showPass,setShowPass] = useState(false);
+  const [rememberMe,setRememberMe] = useState(true);
   const [errors,setErrors] = useState({});
   const [submitting,setSubmitting] = useState(false);
   const [submitted,setSubmitted] = useState(false);
@@ -1636,7 +1639,7 @@ function AuthModal({mode,onClose,onSwitch,onAuthSuccess,onForgotPassword}){
         : await api.login({email, password});
       setSubmitting(false);
       setSubmitted(true);
-      setTimeout(()=>{ onAuthSuccess(data); }, 700);
+      setTimeout(()=>{ onAuthSuccess(data, rememberMe); }, 700);
     } catch (err) {
       setSubmitting(false);
       setErrors({general: err.message});
@@ -1715,11 +1718,15 @@ function AuthModal({mode,onClose,onSwitch,onAuthSuccess,onForgotPassword}){
               {mode==='register' && !errors.password && <div className="form-hint">Използвайте комбинация от букви и цифри</div>}
             </div>
 
-            {mode==='login' && (
-              <div style={{textAlign:'right',marginBottom:18}}>
-                <button type="button" onClick={onForgotPassword} style={{fontSize:12.5,color:'var(--ink-mute)',fontWeight:600}}>Забравена парола?</button>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18,flexWrap:'wrap',gap:6}}>
+              <div className="checkbox-row" style={{marginBottom:0}}>
+                <input type="checkbox" id="rememberMeChk" checked={rememberMe} onChange={e=>setRememberMe(e.target.checked)}/>
+                <label htmlFor="rememberMeChk" style={{margin:0,fontSize:13.5,fontWeight:500,textTransform:'none',color:'var(--ink-soft)'}}>Запомни ме</label>
               </div>
-            )}
+              {mode==='login' && (
+                <button type="button" onClick={onForgotPassword} style={{fontSize:12.5,color:'var(--ink-mute)',fontWeight:600}}>Забравена парола?</button>
+              )}
+            </div>
 
             <button type="submit" className="btn btn-navy btn-full btn-lg" style={{marginTop:6}} disabled={submitting}>
               {submitting ? 'Момент...' : (mode==='register'?'Създай безплатен профил':'Вход')}
@@ -2737,7 +2744,7 @@ const FAQ_ENTRIES = [
   {q:'Как да публикувам обява?', a:'Само работодателски профили могат да публикуват обяви. Регистрирайте се като "Наемам служители", после натиснете "Публикувай обява".'},
   {q:'В каква валута са заплатите?', a:'Обявите показват заплатата първо в евро, после в лева — по фиксирания курс за България (1 EUR = 1.95583 лв.).'},
   {q:'Как да сменя темата на сайта?', a:'Иконата със слънце/луна горе в менюто превключва между светла и тъмна тема. Изборът се запазва автоматично.'},
-  {q:'Как да се свържа с екипа?', a:'Пишете ни на jumpstart.official1@gmail.com — вижте страница "Контакти" за повече информация.'},
+  {q:'Как да се свържа с екипа?', a:'Пишете ни на jumpstart.bg.official@gmail.com — вижте страница "Контакти" за повече информация.'},
 ];
 
 const FAQ_STOPWORDS = new Set(['как','да','за','си','ли','са','от','на','със','мен','ме','ви','му','и','е','ще','това']);
@@ -2797,7 +2804,7 @@ function ChatWidget({token}){
       setMessages(m=>[...m, {from:'bot', text:reply}]);
     } catch (err) {
       const match = findFaqMatch(text);
-      setMessages(m=>[...m, {from:'bot', text: match ? match.a : 'Не съм сигурен, че разбрах правилно. Опитайте с някой от готовите въпроси по-долу, или пишете на jumpstart.official1@gmail.com.'}]);
+      setMessages(m=>[...m, {from:'bot', text: match ? match.a : 'Не съм сигурен, че разбрах правилно. Опитайте с някой от готовите въпроси по-долу, или пишете на jumpstart.bg.official@gmail.com.'}]);
     } finally {
       setThinking(false);
     }
@@ -2930,11 +2937,11 @@ function App(){
     return ()=>{ cancelled = true; };
   },[]);
 
-  // Restore a logged-in session from a saved token (e.g. after a page
-  // refresh or reopening the browser) — users stay logged in until they
-  // explicitly log out.
+  // Restore a logged-in session from a saved token (e.g. after a page refresh).
+  // Checks the "remembered" (localStorage) slot first, then the
+  // this-tab-only (sessionStorage) slot used when "Remember me" was off.
   useEffect(()=>{
-    const saved = safeStorage.get('jumpstart_token');
+    const saved = safeStorage.get('jumpstart_token') || safeSessionStorage.get('jumpstart_token');
     if(!saved) return;
     let cancelled = false;
     api.me(saved).then(u=>{
@@ -2944,6 +2951,7 @@ function App(){
       return refreshUserData(saved);
     }).catch(()=>{
       safeStorage.remove('jumpstart_token');
+      safeSessionStorage.remove('jumpstart_token');
     });
     return ()=>{ cancelled = true; };
   },[]);
@@ -3008,10 +3016,19 @@ function App(){
     }
   };
 
-  const handleAuthSuccess = (data) => {
+  const handleAuthSuccess = (data,rememberMe=true) => {
     setUser(data.user);
     setToken(data.token);
-    safeStorage.set('jumpstart_token', data.token);
+    // Keep the token in only one slot at a time, matching the checkbox at
+    // the moment of login — otherwise a stale copy in the other storage
+    // could resurrect the session after the user expected it to expire.
+    if(rememberMe){
+      safeStorage.set('jumpstart_token', data.token);
+      safeSessionStorage.remove('jumpstart_token');
+    } else {
+      safeSessionStorage.set('jumpstart_token', data.token);
+      safeStorage.remove('jumpstart_token');
+    }
     setAuthMode(null);
     showToast(`Добре дошли, ${data.user.name.split(' ')[0]}!`);
     refreshUserData(data.token);
@@ -3024,6 +3041,7 @@ function App(){
     setApplicationStatuses({});
     setSavedJobs([]);
     safeStorage.remove('jumpstart_token');
+    safeSessionStorage.remove('jumpstart_token');
     showToast('Излязохте от профила си.');
     setPage('home');
   };
