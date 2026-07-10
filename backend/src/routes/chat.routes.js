@@ -183,7 +183,9 @@ router.post('/', chatLimiter, optionalAuth, async (req, res) => {
     res.json({ reply: reply || 'Извинявайте, нещо се обърка.' });
   } catch (err) {
     console.error('POST /chat failed:', err);
-    res.status(500).json({ error: 'Възникна грешка. Опитайте отново.' });
+    // TEMP DEBUG — remove after diagnosing the 500: exposes err.message so it's
+    // visible via curl without needing Render's log console.
+    res.status(500).json({ error: 'Възникна грешка. Опитайте отново.', debug: err.message });
   }
 });
 
