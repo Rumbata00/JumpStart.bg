@@ -761,7 +761,7 @@ const Icon = ({name,size=18,...props}) => {
 
 /* ============ SEED DATA ============ */
 const CATEGORIES = [
-  {id:'it',name:'ИТ и разработка',icon:'code',count:342,color:'#2451A3'},
+  {id:'it',name:'ИТ и разработка',icon:'code',color:'#2451A3'},
   {id:'sales',name:'Продажби',icon:'trending',color:'#2E7D4F'},
   {id:'design',name:'Дизайн',icon:'palette',color:'#8E44AD'},
   {id:'logistics',name:'Логистика',icon:'truck',color:'#C0392B'},
@@ -981,6 +981,7 @@ const api = {
   adminDeleteJob: (token, jobId) => apiFetch(`/admin/jobs/${jobId}`, { method: 'DELETE', token }),
   adminFeatureJob: (token, jobId, days) => apiFetch(`/admin/jobs/${jobId}/feature`, { method: 'PATCH', token, body: { days } }),
   sendContact: (payload) => apiFetch('/contact', { method: 'POST', body: payload }),
+  getStats: () => apiFetch('/stats'),
 };
 
 // The backend stores raw timestamps; these turn them into the same
@@ -1148,39 +1149,38 @@ function Header({user,theme,onToggleTheme,onOpenAuth,onLogout,onGoHome,onGoPost,
 }
 
 /* ============ HERO / SEARCH ============ */
-const HERO_VISUAL_SETS = [
-  {
-    card1:{init:'СК',color:'#2451A3',title:'Senior Frontend',sub:'Софтуерна Кула · София',salary:'3 200 – 4 800 €'},
-    card2:{icon:'checkCircle',color:'var(--green)',text:'Кандидатурата е изпратена'},
-    card3:{stat:'98%',label:'доволни кандидати'},
-  },
-  {
-    card1:{init:'КВ',color:'#E67E22',title:'UX/UI Дизайнер',sub:'Креативна Агенция Вижън · Пловдив',salary:'2 800 – 4 200 €'},
-    card2:{icon:'bell',color:'var(--coral)',text:'Нови обяви всеки ден'},
-    card3:{stat:'156K',label:'регистрирани потребители'},
-  },
-  {
-    card1:{init:'ТР',color:'#2E7D4F',title:'Търговски представител',sub:'Тракия Ритейл · Варна',salary:'2 000 – 3 500 €'},
-    card2:{icon:'users',color:'#2451A3',text:'890+ компании наемат'},
-    card3:{stat:'2 431',label:'активни обяви'},
-  },
-];
-
-function Hero({onSearch}){
+function Hero({onSearch, jobs, jobsLoading, activeJobsCount, companiesCount, registeredUsers}){
   const [kw,setKw] = useState('');
   const [city,setCity] = useState('Всички градове');
   const [visualIndex,setVisualIndex] = useState(0);
 
-  // Rotates the decorative right-side cards through a few example sets —
+  // Real listings to showcase in the rotating card — featured ones first,
+  // then the most recent — never fabricated example data.
+  const visualJobs = useMemo(()=>{
+    const featured = jobs.filter(j=>j.isFeatured);
+    const rest = jobs.filter(j=>!j.isFeatured);
+    return [...featured, ...rest].slice(0,3);
+  },[jobs]);
+
+  // Real platform numbers, rotated in sync with the job card above.
+  const infoCards = useMemo(()=>[
+    {stat:activeJobsCount.toLocaleString('bg-BG'),label:'активни обяви'},
+    {stat:companiesCount.toLocaleString('bg-BG'),label:'компании наемат'},
+    {stat:registeredUsers==null ? '—' : registeredUsers.toLocaleString('bg-BG'),label:'регистрирани потребители'},
+  ],[activeJobsCount,companiesCount,registeredUsers]);
+
+  // Rotates the decorative right-side cards through the real listings —
   // purely cosmetic, so a plain interval (no cleanup edge cases) is fine.
   useEffect(()=>{
+    if(visualJobs.length===0) return;
     const id = setInterval(()=>{
-      setVisualIndex(i=>(i+1)%HERO_VISUAL_SETS.length);
+      setVisualIndex(i=>(i+1)%visualJobs.length);
     }, 7000);
     return ()=>clearInterval(id);
-  },[]);
+  },[visualJobs.length]);
 
-  const visual = HERO_VISUAL_SETS[visualIndex];
+  const job = visualJobs[visualIndex % Math.max(visualJobs.length,1)];
+  const info = infoCards[visualIndex % infoCards.length];
 
   return (
     <section className="hero">
@@ -1189,7 +1189,7 @@ function Hero({onSearch}){
       <div className="hero-orbit-right" aria-hidden="true"></div>
       <div className="hero-dots-right" aria-hidden="true"></div>
       <div className="container hero-inner">
-        <div className="hero-eyebrow">Над 2 400 активни обяви в България</div>
+        <div className="hero-eyebrow">{jobsLoading ? 'Обяви за работа в България' : `${activeJobsCount.toLocaleString('bg-BG')} активни обяви в България`}</div>
         <h1>Намерете следващата си роля<br/>по-бързо, отколкото си мислите</h1>
         <p className="hero-sub">Хиляди компании в България публикуват обяви всеки ден. Създайте профил, кандидатствайте с едно кликване и следете статуса на кандидатурите си.</p>
 
@@ -1213,41 +1213,45 @@ function Hero({onSearch}){
         </div>
 
         <div className="hero-stats">
-          <div><div className="hero-stat-num">2 431</div><div className="hero-stat-label">активни обяви</div></div>
-          <div><div className="hero-stat-num">890+</div><div className="hero-stat-label">компании</div></div>
-          <div><div className="hero-stat-num">156K</div><div className="hero-stat-label">регистрирани потребители</div></div>
+          <div><div className="hero-stat-num">{activeJobsCount.toLocaleString('bg-BG')}</div><div className="hero-stat-label">активни обяви</div></div>
+          <div><div className="hero-stat-num">{companiesCount.toLocaleString('bg-BG')}</div><div className="hero-stat-label">компании</div></div>
+          <div><div className="hero-stat-num">{registeredUsers==null ? '—' : registeredUsers.toLocaleString('bg-BG')}</div><div className="hero-stat-label">регистрирани потребители</div></div>
         </div>
       </div>
 
-      <div className="hero-visual" aria-hidden="true">
-        <div className="hero-visual-card hero-visual-card-1">
-          <div key={'c1-'+visualIndex} className="hero-visual-fade" style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
-            <div className="job-logo" style={{width:36,height:36,fontSize:13,background:visual.card1.color}}>{visual.card1.init}</div>
-            <div>
-              <div style={{fontWeight:700,fontSize:13.5,color:'var(--ink)'}}>{visual.card1.title}</div>
-              <div style={{fontSize:11.5,color:'var(--ink-mute)'}}>{visual.card1.sub}</div>
+      {job && (
+        <div className="hero-visual" aria-hidden="true">
+          <div className="hero-visual-card hero-visual-card-1">
+            <div key={'c1-'+visualIndex} className="hero-visual-fade" style={{display:'flex',alignItems:'center',gap:10,marginBottom:10}}>
+              <div className="job-logo" style={{width:36,height:36,fontSize:13,background:job.companyColor}}>{job.companyInit}</div>
+              <div>
+                <div style={{fontWeight:700,fontSize:13.5,color:'var(--ink)'}}>{job.title}</div>
+                <div style={{fontSize:11.5,color:'var(--ink-mute)'}}>{job.company} · {job.city}</div>
+              </div>
+            </div>
+            {job.salaryMin && job.salaryMax && (
+              <span key={'s1-'+visualIndex} className="hero-visual-fade tag tag-new">{formatSalaryEur(job.salaryMin, job.salaryMax)}</span>
+            )}
+          </div>
+          <div className="hero-visual-card hero-visual-card-2">
+            <div style={{display:'flex',alignItems:'center',gap:8,color:'var(--green)',fontWeight:700,fontSize:13}}>
+              <Icon name="checkCircle" size={18}/>Кандидатствай с едно кликване
             </div>
           </div>
-          <span key={'s1-'+visualIndex} className="hero-visual-fade tag tag-new">{visual.card1.salary}</span>
-        </div>
-        <div className="hero-visual-card hero-visual-card-2">
-          <div key={'c2-'+visualIndex} className="hero-visual-fade" style={{display:'flex',alignItems:'center',gap:8,color:visual.card2.color,fontWeight:700,fontSize:13}}>
-            <Icon name={visual.card2.icon} size={18}/>{visual.card2.text}
+          <div className="hero-visual-card hero-visual-card-3">
+            <div key={'c3-'+visualIndex} className="hero-visual-fade">
+              <div style={{fontSize:24,fontWeight:800,color:'var(--accent)'}}>{info.stat}</div>
+              <div style={{fontSize:11.5,color:'var(--ink-mute)'}}>{info.label}</div>
+            </div>
           </div>
         </div>
-        <div className="hero-visual-card hero-visual-card-3">
-          <div key={'c3-'+visualIndex} className="hero-visual-fade">
-            <div style={{fontSize:24,fontWeight:800,color:'var(--accent)'}}>{visual.card3.stat}</div>
-            <div style={{fontSize:11.5,color:'var(--ink-mute)'}}>{visual.card3.label}</div>
-          </div>
-        </div>
-      </div>
+      )}
     </section>
   );
 }
 
 /* ============ CATEGORIES ============ */
-function Categories({onSelect}){
+function Categories({onSelect,categoryCounts}){
   return (
     <section className="section">
       <div className="container">
@@ -1261,7 +1265,7 @@ function Categories({onSelect}){
                 <Icon name={c.icon} size={21}/>
               </div>
               <h4>{c.name}</h4>
-              <p>{c.count || (120+c.id.length*30)} обяви</p>
+              <p>{(categoryCounts && categoryCounts[c.id]) || 0} обяви</p>
             </div>
           ))}
         </div>
@@ -2924,6 +2928,29 @@ function App(){
     return ()=>{ cancelled = true; };
   },[]);
 
+  // Real, live platform numbers for the homepage (replaces old hardcoded
+  // marketing figures). Active listings + companies are derived straight
+  // from the loaded job list, so they update the instant `jobs` changes.
+  // Registered users isn't in that payload, so it's fetched separately —
+  // on mount, then refreshed periodically so the number stays current for
+  // anyone who leaves the homepage tab open.
+  const [registeredUsers,setRegisteredUsers] = useState(null);
+  useEffect(()=>{
+    let cancelled = false;
+    const loadStats = () => api.getStats().then(d=>{ if(!cancelled) setRegisteredUsers(d.users); }).catch(()=>{});
+    loadStats();
+    const id = setInterval(loadStats, 60000);
+    return ()=>{ cancelled = true; clearInterval(id); };
+  },[]);
+
+  const activeJobsCount = jobs.length;
+  const companiesCount = useMemo(()=>new Set(jobs.map(j=>j.company)).size,[jobs]);
+  const categoryCounts = useMemo(()=>{
+    const counts = {};
+    jobs.forEach(j=>{ counts[j.category] = (counts[j.category]||0)+1; });
+    return counts;
+  },[jobs]);
+
   // Restore a logged-in session from a saved token (e.g. after a page refresh).
   // Checks the "remembered" (localStorage) slot first, then the
   // this-tab-only (sessionStorage) slot used when "Remember me" was off.
@@ -3071,8 +3098,8 @@ function App(){
 
       {page==='home' && (
         <>
-          <Hero onSearch={handleSearch}/>
-          <Categories onSelect={handleCategorySelect}/>
+          <Hero onSearch={handleSearch} jobs={jobs} jobsLoading={jobsLoading} activeJobsCount={activeJobsCount} companiesCount={companiesCount} registeredUsers={registeredUsers}/>
+          <Categories onSelect={handleCategorySelect} categoryCounts={categoryCounts}/>
           <section className="section">
             <div className="container">
               <div className="section-head">
